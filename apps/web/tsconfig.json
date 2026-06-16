@@ -1,0 +1,30 @@
+{
+  // Config del código de la app (todo lo de src/). Usamos moduleResolution
+  // "bundler" porque Vite resuelve los imports, no Node. noEmit porque el
+  // bundle lo genera Vite; tsc solo type-checkea.
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    // Alias "@/" hacia src/ (regla del proyecto) y acceso directo al source de
+    // shared para tener tipos sin pasar por un build intermedio en desarrollo.
+    "paths": {
+      "@/*": ["./src/*"],
+      "@track/shared": ["../../packages/shared/src/index.ts"]
+    }
+  },
+  "include": ["src"]
+}

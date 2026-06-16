@@ -1,0 +1,17 @@
+# Dependencias
+node_modules/
+
+# Builds
+dist/
+build/
+*.tsbuildinfo
+
+# Entornos locales (no commitear secretos)
+.env
+.env.*
+!.env.example
+
+# Logs y temporales
+*.log
+.DS_Store
+.vite/

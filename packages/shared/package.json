@@ -1,0 +1,25 @@
+{
+  "name": "@track/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Tipos e interfaces compartidos entre web y api (más schemas Zod reutilizables)",
+  "type": "commonjs",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "dev": "tsc -w -p tsconfig.json",
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "zod": "^4.4.0"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.0"
+  }
+}

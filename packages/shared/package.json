@@ -2,7 +2,7 @@
   "name": "@track/shared",
   "version": "0.1.0",
   "private": true,
-  "description": "Tipos e interfaces compartidos entre web y api (más schemas Zod reutilizables)",
+  "description": "Shared types and interfaces between web and api (plus reusable Zod schemas)",
   "type": "commonjs",
   "main": "src/index.ts",
   "types": "src/index.ts",

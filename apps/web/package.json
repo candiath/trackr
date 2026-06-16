@@ -2,7 +2,7 @@
   "name": "@track/web",
   "version": "0.1.0",
   "private": true,
-  "description": "Frontend de Track (React 19 + Vite)",
+  "description": "Track frontend (React 19 + Vite)",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -1,14 +1,10 @@
 /**
- * Cliente HTTP centralizado: ÚNICO punto donde el front habla con la API.
+ * Centralized HTTP client: the ONLY place where the frontend talks to the API.
  *
- * Por qué centralizar: la base sale de una sola variable de entorno, el
- * desempaquetado de { data } / { error } se hace en un solo lugar y, cuando
- * exista auth, el header Authorization se agrega ACÁ y nada más. Los services
- * por entidad solo declaran rutas; no repiten lógica de fetch.
- *
- * Nota Fase 1: en el prototipo con mockdata este cliente no se usa todavía (los
- * services resuelven contra datos en memoria), pero queda listo para enchufar
- * el backend en Fase 2 sin tocar la firma de los services.
+ * Why centralize: the base URL comes from a single env variable, unwrapping
+ * { data } / { error } happens in one place and, once auth exists, the
+ * Authorization header is added HERE and nowhere else. Per-entity services only
+ * declare routes; they don't repeat fetch logic.
  */
 const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
 
@@ -20,11 +16,11 @@ async function request<T>(
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
     headers: { 'Content-Type': 'application/json' },
-    // Solo serializamos si hay body: un GET/DELETE no debería mandar cuerpo.
+    // Only serialize when there is a body: a GET/DELETE shouldn't send one.
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 
-  // 204 No Content: no hay JSON que parsear (típico de un DELETE).
+  // 204 No Content: nothing to parse (typical of a DELETE).
   if (res.status === 204) return undefined as T;
 
   const payload = (await res.json().catch(() => ({}))) as {
@@ -32,8 +28,8 @@ async function request<T>(
     error?: string;
   };
 
-  // Si la respuesta no es ok, lanzamos con el mensaje del back para que
-  // TanStack Query lo capture y la UI muestre algo accionable.
+  // If the response isn't ok, throw with the backend message so TanStack Query
+  // catches it and the UI can show something actionable.
   if (!res.ok) {
     throw new Error(payload.error ?? `Error ${res.status}`);
   }

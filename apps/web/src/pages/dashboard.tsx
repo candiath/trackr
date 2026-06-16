@@ -2,46 +2,45 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, SmilePlus } from 'lucide-react';
-import { recaidaApi, recaidaKeys } from '@/services/recaidas';
+import { relapseApi, relapseKeys } from '@/services/relapses';
 import { moodApi, moodKeys } from '@/services/mood';
-import { MOOD_META, valorANivel } from '@/lib/mood';
-import { promedioGeneral } from '@/lib/mood-stats';
-import { formatFechaRelativa } from '@/lib/format';
+import { MOOD_META, valueToLevel } from '@/lib/mood';
+import { overallAverage } from '@/lib/mood-stats';
+import { formatRelativeDate } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { SobriedadCard } from '@/components/recaidas/sobriedad-card';
-import { NuevaConductaDialog } from '@/components/recaidas/nueva-conducta-dialog';
-import { RegistrarMoodDialog } from '@/components/mood/registrar-mood-dialog';
-import { MoodTendencia } from '@/components/mood/mood-tendencia';
-import { MiSobriedadCard } from '@/components/recaidas/mi-sobriedad-card';
+import { BehaviorFormDialog } from '@/components/relapses/behavior-form-dialog';
+import { MySobrietyCard } from '@/components/relapses/my-sobriety-card';
+import { LogMoodDialog } from '@/components/mood/log-mood-dialog';
+import { MoodTrend } from '@/components/mood/mood-trend';
 
-function saludo(): string {
+function greeting(): string {
   const h = new Date().getHours();
-  if (h < 6) return 'Buenas noches';
-  if (h < 13) return 'Buen día';
-  if (h < 20) return 'Buenas tardes';
-  return 'Buenas noches';
+  if (h < 6) return 'Good night';
+  if (h < 13) return 'Good morning';
+  if (h < 20) return 'Good afternoon';
+  return 'Good evening';
 }
 
 export function DashboardPage() {
-  const [moodAbierto, setMoodAbierto] = useState(false);
-  const [conductaAbierto, setConductaAbierto] = useState(false);
+  const [moodOpen, setMoodOpen] = useState(false);
+  const [behaviorOpen, setBehaviorOpen] = useState(false);
 
-  const { data: recaidas = [] } = useQuery({
-    queryKey: recaidaKeys.all,
-    queryFn: recaidaApi.list,
+  const { data: relapses = [] } = useQuery({
+    queryKey: relapseKeys.all,
+    queryFn: relapseApi.list,
   });
   const { data: moods = [] } = useQuery({
     queryKey: moodKeys.all,
     queryFn: moodApi.list,
   });
 
-  const ultimoMood = moods[0] ?? null;
-  const promedio = promedioGeneral(moods);
-  const metaPromedio = promedio != null ? MOOD_META[valorANivel(promedio)] : null;
+  const lastMood = moods[0] ?? null;
+  const average = overallAverage(moods);
+  const averageMeta = average != null ? MOOD_META[valueToLevel(average)] : null;
 
-  const hoy = new Date().toLocaleDateString('es-AR', {
+  const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -50,42 +49,40 @@ export function DashboardPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-bold tracking-tight">{saludo()} 👋</h1>
-        <p className="text-sm capitalize text-muted-foreground">{hoy}</p>
+        <h1 className="text-2xl font-bold tracking-tight">{greeting()} 👋</h1>
+        <p className="text-sm text-muted-foreground">{today}</p>
       </header>
 
       <div className="flex flex-wrap gap-2">
-        <Button onClick={() => setMoodAbierto(true)}>
+        <Button onClick={() => setMoodOpen(true)}>
           <SmilePlus />
-          Registrar ánimo
+          Log mood
         </Button>
-        <Button variant="outline" onClick={() => setConductaAbierto(true)}>
+        <Button variant="outline" onClick={() => setBehaviorOpen(true)}>
           <Plus />
-          Nueva conducta
+          New behavior
         </Button>
       </div>
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Tu sobriedad</h2>
+          <h2 className="text-lg font-semibold">Your sobriety</h2>
           <Link
-            to="/recaidas"
+            to="/relapses"
             className={cn(buttonVariants({ variant: 'link', size: 'sm' }), 'h-auto p-0')}
           >
-            Ver todo
+            See all
           </Link>
         </div>
-        {recaidas.length === 0 ? (
+        {relapses.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Todavía no seguís ninguna conducta.
+            You're not tracking any behavior yet.
           </p>
         ) : (
-          // <div className="grid gap-4 sm:grid-cols-2">
           <div className="grid gap-4 sm:grid-cols-2">
-            {recaidas.map((r) => (
+            {relapses.map((r) => (
               <div key={r.id} className="grid gap-4">
-                <MiSobriedadCard recaida={r} className="flex-1" />
-                {/* <SobriedadCard recaida={r} className="flex-1" /> */}
+                <MySobrietyCard relapse={r} className="flex-1" />
               </div>
             ))}
           </div>
@@ -94,39 +91,39 @@ export function DashboardPage() {
 
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Tu ánimo</h2>
+          <h2 className="text-lg font-semibold">Your mood</h2>
           <Link
             to="/mood"
             className={cn(buttonVariants({ variant: 'link', size: 'sm' }), 'h-auto p-0')}
           >
-            Ver todo
+            See all
           </Link>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-3">
           <Card className="lg:col-span-1">
             <CardHeader>
-              <CardTitle>Ahora mismo</CardTitle>
+              <CardTitle>Right now</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {ultimoMood ? (
+              {lastMood ? (
                 <div className="flex items-center gap-3">
-                  <span className="text-4xl">{MOOD_META[ultimoMood.nivel].emoji}</span>
+                  <span className="text-4xl">{MOOD_META[lastMood.level].emoji}</span>
                   <div>
-                    <p className="font-medium">{MOOD_META[ultimoMood.nivel].label}</p>
+                    <p className="font-medium">{MOOD_META[lastMood.level].label}</p>
                     <p className="text-xs text-muted-foreground">
-                      {formatFechaRelativa(ultimoMood.fecha)}
+                      {formatRelativeDate(lastMood.date)}
                     </p>
                   </div>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">Sin registros aún.</p>
+                <p className="text-sm text-muted-foreground">No entries yet.</p>
               )}
-              {metaPromedio && (
+              {averageMeta && (
                 <div className="rounded-lg bg-muted/50 p-3 text-sm">
-                  <span className="text-muted-foreground">Promedio reciente: </span>
+                  <span className="text-muted-foreground">Recent average: </span>
                   <span className="font-medium">
-                    {metaPromedio.emoji} {metaPromedio.label}
+                    {averageMeta.emoji} {averageMeta.label}
                   </span>
                 </div>
               )}
@@ -135,17 +132,17 @@ export function DashboardPage() {
 
           <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle>Tendencia</CardTitle>
+              <CardTitle>Trend</CardTitle>
             </CardHeader>
             <CardContent>
-              <MoodTendencia entries={moods} />
+              <MoodTrend entries={moods} />
             </CardContent>
           </Card>
         </div>
       </section>
 
-      <NuevaConductaDialog open={conductaAbierto} onOpenChange={setConductaAbierto} />
-      <RegistrarMoodDialog open={moodAbierto} onOpenChange={setMoodAbierto} />
+      <BehaviorFormDialog open={behaviorOpen} onOpenChange={setBehaviorOpen} />
+      <LogMoodDialog open={moodOpen} onOpenChange={setMoodOpen} />
     </div>
   );
 }

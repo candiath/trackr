@@ -3,9 +3,9 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 /**
- * Variantes de botón con CVA. Por qué CVA: define las combinaciones
- * variant/size en un solo lugar, con tipos derivados automáticamente, en vez de
- * encadenar ternarios de clases en cada uso.
+ * Button variants with CVA. Why CVA: it defines the variant/size combinations in
+ * one place, with automatically derived types, instead of chaining class ternaries
+ * at every use.
  */
 const buttonVariants = cva(
   'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0',
@@ -36,13 +36,13 @@ const buttonVariants = cva(
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
-  // React 19: ref como prop normal. Lo aceptamos explícitamente para que Base UI
-  // (que usa `render` para inyectar props y ref en el trigger) pueda adjuntar su
-  // ref cuando pasamos un <Button> como disparador de Tooltip/Dialog.
+  // React 19: ref as a normal prop. We accept it explicitly so Base UI (which uses
+  // `render` to inject props and ref into the trigger) can attach its ref when we
+  // pass a <Button> as a Tooltip/Dialog trigger.
   ref?: React.Ref<HTMLButtonElement>;
 }
 
-// Para estilar un <Link> como botón se aplica `buttonVariants()` a su className.
+// To style a <Link> as a button, apply `buttonVariants()` to its className.
 export function Button({ className, variant, size, ref, ...props }: ButtonProps) {
   return (
     <button ref={ref} className={cn(buttonVariants({ variant, size, className }))} {...props} />

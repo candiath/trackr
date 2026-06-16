@@ -1,22 +1,22 @@
 import { Route, Routes } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/app-layout';
 import { DashboardPage } from '@/pages/dashboard';
-import { RecaidasPage } from '@/pages/recaidas';
-import { RecaidaDetallePage } from '@/pages/recaida-detalle';
+import { RelapsesPage } from '@/pages/relapses';
+import { RelapseDetailPage } from '@/pages/relapse-detail';
 import { MoodPage } from '@/pages/mood';
 import { NotFoundPage } from '@/pages/not-found';
 
 /**
- * Mapa de rutas. AppLayout es la ruta "padre" (sidebar + Outlet) y todo lo
- * demás cuelga adentro, así la navegación persiste entre pantallas.
+ * Route map. AppLayout is the "parent" route (sidebar + Outlet) and everything
+ * else hangs inside, so navigation persists across screens.
  */
 export function App() {
   return (
     <Routes>
       <Route element={<AppLayout />}>
         <Route index element={<DashboardPage />} />
-        <Route path="recaidas" element={<RecaidasPage />} />
-        <Route path="recaidas/:id" element={<RecaidaDetallePage />} />
+        <Route path="relapses" element={<RelapsesPage />} />
+        <Route path="relapses/:id" element={<RelapseDetailPage />} />
         <Route path="mood" element={<MoodPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>

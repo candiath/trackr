@@ -2,8 +2,8 @@ import { type ComponentProps } from 'react';
 import { Separator as BaseSeparator } from '@base-ui/react/separator';
 import { cn } from '@/lib/utils';
 
-// Separador sobre Base UI (aporta el role/aria correctos). Por defecto
-// horizontal; soporta vertical para divisiones en línea.
+// Separator over Base UI (provides the correct role/aria). Horizontal by
+// default; supports vertical for inline dividers.
 export function Separator({
   className,
   orientation = 'horizontal',

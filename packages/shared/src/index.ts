@@ -1,10 +1,10 @@
 /**
- * Punto único de exportación del paquete compartido.
+ * Single export entry point for the shared package.
  *
- * Regla del proyecto: acá viven SOLO tipos planos y schemas Zod que la API
- * expone/valida. Nada de Prisma ni dependencias de runtime del back o del front,
- * para que web y api compartan contrato sin acoplarse a la implementación.
+ * Project rule: ONLY plain types and Zod schemas that the API exposes/validates
+ * live here. No Prisma and no backend/frontend runtime dependencies, so web and
+ * api share a contract without coupling to the implementation.
  */
 export * from './common';
 export * from './mood';
-export * from './recaida';
+export * from './relapse';

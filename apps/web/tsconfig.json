@@ -1,7 +1,7 @@
 {
-  // Config del código de la app (todo lo de src/). Usamos moduleResolution
-  // "bundler" porque Vite resuelve los imports, no Node. noEmit porque el
-  // bundle lo genera Vite; tsc solo type-checkea.
+  // Config for the app code (everything under src/). We use moduleResolution
+  // "bundler" because Vite resolves the imports, not Node. noEmit because Vite
+  // generates the bundle; tsc only type-checks.
   "compilerOptions": {
     "target": "ES2022",
     "useDefineForClassFields": true,
@@ -19,8 +19,8 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
-    // Alias "@/" hacia src/ (regla del proyecto) y acceso directo al source de
-    // shared para tener tipos sin pasar por un build intermedio en desarrollo.
+    // Alias "@/" to src/ (project rule) and direct access to shared's source so
+    // we get types without an intermediate build during development.
     "paths": {
       "@/*": ["./src/*"],
       "@track/shared": ["../../packages/shared/src/index.ts"]

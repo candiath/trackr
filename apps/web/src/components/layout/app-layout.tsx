@@ -4,14 +4,14 @@ import { cn } from '@/lib/utils';
 import { ThemeToggle } from './theme-toggle';
 
 /**
- * Navegación principal. Centralizada en un array para que agregar una sección
- * (ej: Tareas/Hábitos en Fase 2) sea una línea, no tocar el JSX en dos lugares
- * (sidebar de escritorio + barra móvil).
+ * Main navigation. Centralized in an array so adding a section (e.g. Tasks/Habits
+ * later) is one line, not editing the JSX in two places (desktop sidebar + mobile
+ * bar).
  */
 const NAV = [
-  { to: '/', label: 'Inicio', Icon: LayoutDashboard, end: true },
-  { to: '/recaidas', label: 'Recaídas', Icon: ShieldCheck, end: false },
-  { to: '/mood', label: 'Ánimo', Icon: SmilePlus, end: false },
+  { to: '/', label: 'Home', Icon: LayoutDashboard, end: true },
+  { to: '/relapses', label: 'Relapses', Icon: ShieldCheck, end: false },
+  { to: '/mood', label: 'Mood', Icon: SmilePlus, end: false },
 ] as const;
 
 function Logo() {
@@ -37,7 +37,7 @@ function navLinkClass({ isActive }: { isActive: boolean }) {
 export function AppLayout() {
   return (
     <div className="min-h-dvh bg-background">
-      {/* Sidebar fijo en escritorio (md+). */}
+      {/* Fixed sidebar on desktop (md+). */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-border bg-card px-4 py-6 md:flex">
         <div className="px-2">
           <Logo />
@@ -51,12 +51,12 @@ export function AppLayout() {
           ))}
         </nav>
         <div className="flex items-center justify-between border-t border-border pt-4">
-          <span className="px-2 text-xs text-muted-foreground">Tema</span>
+          <span className="px-2 text-xs text-muted-foreground">Theme</span>
           <ThemeToggle />
         </div>
       </aside>
 
-      {/* Barra superior en móvil (md:hidden). */}
+      {/* Top bar on mobile (md:hidden). */}
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-card/80 px-4 py-3 backdrop-blur md:hidden">
         <Logo />
         <ThemeToggle />
@@ -70,7 +70,7 @@ export function AppLayout() {
         ))}
       </nav>
 
-      {/* Contenido: deja espacio para el sidebar en escritorio. */}
+      {/* Content: leaves room for the sidebar on desktop. */}
       <main className="md:pl-60">
         <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
           <Outlet />

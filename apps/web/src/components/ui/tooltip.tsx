@@ -3,10 +3,10 @@ import { Tooltip as BaseTooltip } from '@base-ui/react/tooltip';
 import { cn } from '@/lib/utils';
 
 /**
- * Tooltip sobre Base UI con piezas tipo shadcn. Bundleamos Provider + Root en
- * `Tooltip` para que cada uso sea autocontenido (el Provider se puede anidar).
- * El Trigger se usa con la prop `render` de Base UI para envolver cualquier
- * elemento (un Button, un Link) sin agregar un wrapper extra al DOM.
+ * Tooltip over Base UI with shadcn-like pieces. We bundle Provider + Root into
+ * `Tooltip` so each use is self-contained (the Provider can be nested). The Trigger
+ * is used with Base UI's `render` prop to wrap any element (a Button, a Link)
+ * without adding an extra DOM wrapper.
  */
 export function Tooltip({
   children,

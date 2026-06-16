@@ -4,13 +4,13 @@ import { Plus } from 'lucide-react';
 import { moodApi, moodKeys } from '@/services/mood';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RegistrarMoodDialog } from '@/components/mood/registrar-mood-dialog';
-import { MoodTendencia } from '@/components/mood/mood-tendencia';
-import { MoodCalendario } from '@/components/mood/mood-calendario';
+import { LogMoodDialog } from '@/components/mood/log-mood-dialog';
+import { MoodTrend } from '@/components/mood/mood-trend';
+import { MoodCalendar } from '@/components/mood/mood-calendar';
 import { MoodTimeline } from '@/components/mood/mood-timeline';
 
 export function MoodPage() {
-  const [abierto, setAbierto] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const { data: entries = [] } = useQuery({
     queryKey: moodKeys.all,
@@ -21,47 +21,47 @@ export function MoodPage() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Estado de ánimo</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Mood</h1>
           <p className="text-sm text-muted-foreground">
-            Registrá cómo te sentís y descubrí tus patrones.
+            Log how you feel and discover your patterns.
           </p>
         </div>
-        <Button onClick={() => setAbierto(true)}>
+        <Button onClick={() => setOpen(true)}>
           <Plus />
-          Registrar ánimo
+          Log mood
         </Button>
       </header>
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Tendencia (30 días)</CardTitle>
+            <CardTitle>Trend (30 days)</CardTitle>
           </CardHeader>
           <CardContent>
-            <MoodTendencia entries={entries} />
+            <MoodTrend entries={entries} />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Calendario</CardTitle>
+            <CardTitle>Calendar</CardTitle>
           </CardHeader>
           <CardContent>
-            <MoodCalendario entries={entries} />
+            <MoodCalendar entries={entries} />
           </CardContent>
         </Card>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Historial</CardTitle>
+          <CardTitle>History</CardTitle>
         </CardHeader>
         <CardContent>
           <MoodTimeline entries={entries} />
         </CardContent>
       </Card>
 
-      <RegistrarMoodDialog open={abierto} onOpenChange={setAbierto} />
+      <LogMoodDialog open={open} onOpenChange={setOpen} />
     </div>
   );
 }

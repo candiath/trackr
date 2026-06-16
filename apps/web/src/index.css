@@ -1,23 +1,23 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* Tailwind v4 es CSS-first: no hay tailwind.config.js. El modo oscuro lo maneja
-   next-themes agregando la clase .dark en <html>, así que definimos la variante
-   "dark" para que las utilidades dark: respondan a esa clase (y no a media). */
+/* Tailwind v4 is CSS-first: there's no tailwind.config.js. Dark mode is handled
+   by next-themes adding the .dark class on <html>, so we define the "dark"
+   variant so dark: utilities respond to that class (and not to media). */
 @custom-variant dark (&:is(.dark *));
 
-/* Tipografía: Geist para el cuerpo/títulos (font-sans) y Geist Mono para datos
-   numéricos (font-mono). Sobreescribimos los tokens de fuente de Tailwind, así
-   `font-sans`/`font-mono` y el body (preflight) usan Geist sin tocar cada clase. */
+/* Typography: Geist for body/headings (font-sans) and Geist Mono for numeric
+   data (font-mono). We override Tailwind's font tokens so `font-sans`/`font-mono`
+   and the body (preflight) use Geist without touching each class. */
 @theme {
   --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
-/* Paleta neutra "stock" de shadcn (base color: neutral). Look blanco y negro:
-   el primario es casi-negro en claro y casi-blanco en oscuro; el resto son
-   grises sin tinte. Los colores semánticos de datos (escala de mood, color por
-   conducta) NO viven acá: se manejan inline en sus componentes. */
+/* Stock shadcn neutral palette (base color: neutral). Black-and-white look: the
+   primary is near-black in light and near-white in dark; the rest are untinted
+   grays. Semantic data colors (mood scale, per-behavior color) do NOT live here:
+   they are handled inline in their components. */
 :root {
   --radius: 0.625rem;
 
@@ -80,9 +80,9 @@
   --ring: oklch(0.556 0 0);
 }
 
-/* @theme inline expone las variables como tokens de Tailwind, de modo que
-   bg-background, text-foreground, border-border, etc. funcionen y respeten el
-   tema activo (claro/oscuro) automáticamente. */
+/* @theme inline exposes the variables as Tailwind tokens, so bg-background,
+   text-foreground, border-border, etc. work and automatically respect the active
+   theme (light/dark). */
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

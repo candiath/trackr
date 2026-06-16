@@ -1,47 +1,46 @@
-import type { MoodNivel } from '@track/shared';
+import type { MoodLevel } from '@track/shared';
 
 /**
- * Metadatos visuales de cada nivel de ánimo. Centralizamos label, emoji, color
- * y valor numérico en un solo lugar: la escala es cualitativa en el dominio,
- * pero para graficar y promediar necesitamos un número (1..5), y para el
- * calendario/heatmap necesitamos un color consistente. Así un solo cambio acá
- * se refleja en formularios, timeline, calendario y gráficos.
+ * Visual metadata for each mood level. We centralize label, emoji, color and a
+ * numeric value in one place: the scale is qualitative in the domain, but to chart
+ * and average we need a number (1..5), and the calendar/heatmap needs a consistent
+ * color. A single change here is reflected in forms, timeline, calendar and charts.
  */
 export interface MoodMeta {
-  nivel: MoodNivel;
+  level: MoodLevel;
   label: string;
   emoji: string;
-  /** 1 (muy malo) … 5 (muy bueno). Para promedios y ejes de gráficos. */
-  valor: number;
-  /** Color sólido (hex) para puntos, barras y celdas del calendario. */
+  /** 1 (very bad) … 5 (very good). For averages and chart axes. */
+  value: number;
+  /** Solid color (hex) for dots, bars and calendar cells. */
   color: string;
 }
 
-export const MOOD_META: Record<MoodNivel, MoodMeta> = {
-  MUY_BUENO: { nivel: 'MUY_BUENO', label: 'Muy bueno', emoji: '😄', valor: 5, color: '#22c55e' },
-  BUENO: { nivel: 'BUENO', label: 'Bueno', emoji: '🙂', valor: 4, color: '#84cc16' },
-  REGULAR: { nivel: 'REGULAR', label: 'Regular', emoji: '😐', valor: 3, color: '#eab308' },
-  MALO: { nivel: 'MALO', label: 'Malo', emoji: '🙁', valor: 2, color: '#f97316' },
-  MUY_MALO: { nivel: 'MUY_MALO', label: 'Muy malo', emoji: '😣', valor: 1, color: '#ef4444' },
+export const MOOD_META: Record<MoodLevel, MoodMeta> = {
+  VERY_GOOD: { level: 'VERY_GOOD', label: 'Very good', emoji: '😄', value: 5, color: '#22c55e' },
+  GOOD: { level: 'GOOD', label: 'Good', emoji: '🙂', value: 4, color: '#84cc16' },
+  OKAY: { level: 'OKAY', label: 'Okay', emoji: '😐', value: 3, color: '#eab308' },
+  BAD: { level: 'BAD', label: 'Bad', emoji: '🙁', value: 2, color: '#f97316' },
+  VERY_BAD: { level: 'VERY_BAD', label: 'Very bad', emoji: '😣', value: 1, color: '#ef4444' },
 };
 
-/** De peor a mejor: el orden con el que se muestran los selectores y leyendas. */
-export const MOOD_NIVELES: MoodNivel[] = [
-  'MUY_MALO',
-  'MALO',
-  'REGULAR',
-  'BUENO',
-  'MUY_BUENO',
+/** Worst to best: the order selectors and legends are shown in. */
+export const MOOD_LEVELS: MoodLevel[] = [
+  'VERY_BAD',
+  'BAD',
+  'OKAY',
+  'GOOD',
+  'VERY_GOOD',
 ];
 
-/** Inverso de `valor`: convierte un promedio numérico al nivel más cercano. */
-export function valorANivel(valor: number): MoodNivel {
-  const redondeado = Math.round(Math.min(5, Math.max(1, valor)));
-  const meta = Object.values(MOOD_META).find((m) => m.valor === redondeado);
-  return meta?.nivel ?? 'REGULAR';
+/** Inverse of `value`: converts a numeric average to the closest level. */
+export function valueToLevel(value: number): MoodLevel {
+  const rounded = Math.round(Math.min(5, Math.max(1, value)));
+  const meta = Object.values(MOOD_META).find((m) => m.value === rounded);
+  return meta?.level ?? 'OKAY';
 }
 
-/** Color para un promedio (interpola al nivel más cercano). Útil en el calendario. */
-export function colorPorValor(valor: number): string {
-  return MOOD_META[valorANivel(valor)].color;
+/** Color for an average (snaps to the closest level). Useful in the calendar. */
+export function colorForValue(value: number): string {
+  return MOOD_META[valueToLevel(value)].color;
 }

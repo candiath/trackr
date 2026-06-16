@@ -1,9 +1,9 @@
 /**
- * Wrapper genérico de respuesta de la API.
+ * Generic API response wrapper.
  *
- * Por qué: toda respuesta exitosa viaja como { data } y los errores como
- * { error }. Tener un único tipo evita que cada endpoint invente su forma y
- * permite que el cliente HTTP del front desempaquete siempre igual.
+ * Why: every successful response travels as { data } and errors as { error }.
+ * Having a single type stops each endpoint from inventing its own shape and lets
+ * the frontend HTTP client always unwrap the same way.
  */
 export interface ApiResponse<T> {
   data: T;

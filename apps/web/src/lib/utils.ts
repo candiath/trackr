@@ -2,10 +2,10 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 /**
- * Combina clases condicionales (clsx) y resuelve conflictos de Tailwind
- * (tailwind-merge). Por qué las dos: clsx arma la lista según props/estado, y
- * twMerge garantiza que la última utilidad gane (ej: "p-2 p-4" → "p-4"), que es
- * justo lo que rompe si solo concatenás strings.
+ * Combines conditional classes (clsx) and resolves Tailwind conflicts
+ * (tailwind-merge). Why both: clsx builds the list from props/state, and twMerge
+ * guarantees the last utility wins (e.g. "p-2 p-4" → "p-4"), which is exactly
+ * what breaks if you only concatenate strings.
  */
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));

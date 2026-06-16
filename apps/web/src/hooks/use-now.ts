@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
 
 /**
- * Devuelve "ahora" y lo actualiza cada `intervaloMs`. Sirve para los contadores
- * en vivo de sobriedad: un único intervalo por componente re-renderiza y todos
- * los cálculos de duración usan ese mismo instante (coherencia entre tarjetas).
+ * Returns "now" and updates it every `intervalMs`. Used by the live sobriety
+ * counters: a single interval per component re-renders and every duration
+ * calculation uses that same instant (coherence across cards).
  */
-export function useNow(intervaloMs = 1000): Date {
+export function useNow(intervalMs = 1000): Date {
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), intervaloMs);
+    const id = setInterval(() => setNow(new Date()), intervalMs);
     return () => clearInterval(id);
-  }, [intervaloMs]);
+  }, [intervalMs]);
 
   return now;
 }

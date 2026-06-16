@@ -2,16 +2,17 @@
   "name": "track",
   "version": "0.1.0",
   "private": true,
-  "description": "Track — productividad y bienestar (tareas, hábitos, recaídas y mood)",
+  "description": "Track — productivity and wellbeing (tasks, habits, relapses and mood)",
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently -n shared,web -c blue,green \"npm:dev:shared\" \"npm:dev:web\"",
+    "dev": "concurrently -n shared,api,web -c blue,magenta,green \"npm:dev:shared\" \"npm:dev:api\" \"npm:dev:web\"",
     "dev:shared": "npm run dev -w @track/shared",
+    "dev:api": "npm run dev -w @track/api",
     "dev:web": "npm run dev -w @track/web",
-    "build": "npm run build -w @track/shared && npm run build -w @track/web",
+    "build": "npm run build -w @track/shared && npm run build -w @track/api && npm run build -w @track/web",
     "lint": "npm run lint -w @track/web"
   },
   "devDependencies": {

@@ -1,7 +1,7 @@
 {
-  // shared compila a CommonJS porque la api (Fase 2) corre con type=commonjs;
-  // así el mismo dist sirve para Node sin transpilación extra. El front no usa
-  // este dist: lo importa por alias directo al source (ver vite.config del web).
+  // shared compiles to CommonJS because the api runs with type=commonjs; the same
+  // dist works for Node without extra transpilation. The frontend doesn't use this
+  // dist: it imports via a direct alias to the source (see the web vite.config).
   "compilerOptions": {
     "target": "ES2022",
     "module": "commonjs",

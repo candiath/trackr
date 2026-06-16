@@ -1,0 +1,19 @@
+{
+  // The API runs through tsx (esbuild) in dev and prod, so tsc is used only for
+  // type-checking (--noEmit). It imports @track/shared straight from its TS
+  // source, which is why we don't enforce rootDir/outDir here.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["src", "prisma"]
+}

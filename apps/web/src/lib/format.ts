@@ -1,75 +1,71 @@
 /**
- * Helpers de fecha y duración. Centralizados para que toda la app muestre
- * fechas con el mismo locale (es-AR) y el mismo criterio de redondeo.
+ * Date and duration helpers. Centralized so the whole app formats dates with the
+ * same locale (en-US) and the same rounding rules.
  */
 
-const LOCALE = 'es-AR';
+const LOCALE = 'en-US';
 
-export interface Duracion {
-  dias: number;
-  horas: number;
-  minutos: number;
-  segundos: number;
+export interface Duration {
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
   totalMs: number;
-  /** Días con decimales, útil para comparar contra hitos. */
-  totalDias: number;
+  /** Days with decimals, handy to compare against milestones. */
+  totalDays: number;
 }
 
 /**
- * Descompone el tiempo transcurrido entre dos instantes. `hasta` se inyecta
- * (en vez de usar Date.now() adentro) para que el contador en vivo pueda pasar
- * el "ahora" que tickea cada segundo y el cálculo sea puro/testeable.
+ * Breaks down the time elapsed between two instants. `until` is injected (instead
+ * of using Date.now() inside) so the live counter can pass the "now" that ticks
+ * every second and the calculation stays pure/testable.
  */
-export function calcularDuracion(
-  desdeIso: string,
-  hasta: Date = new Date(),
-): Duracion {
-  const desde = new Date(desdeIso).getTime();
-  const totalMs = Math.max(0, hasta.getTime() - desde);
-  const totalSeg = Math.floor(totalMs / 1000);
+export function computeDuration(fromIso: string, until: Date = new Date()): Duration {
+  const from = new Date(fromIso).getTime();
+  const totalMs = Math.max(0, until.getTime() - from);
+  const totalSec = Math.floor(totalMs / 1000);
 
   return {
-    dias: Math.floor(totalSeg / 86400),
-    horas: Math.floor((totalSeg % 86400) / 3600),
-    minutos: Math.floor((totalSeg % 3600) / 60),
-    segundos: totalSeg % 60,
+    days: Math.floor(totalSec / 86400),
+    hours: Math.floor((totalSec % 86400) / 3600),
+    minutes: Math.floor((totalSec % 3600) / 60),
+    seconds: totalSec % 60,
     totalMs,
-    totalDias: totalMs / 86_400_000,
+    totalDays: totalMs / 86_400_000,
   };
 }
 
-/** "12d 04h 03m 20s" — formato compacto para el contador en vivo. */
-export function formatDuracionContador(d: Duracion): string {
-  const dd = String(d.dias);
-  const hh = String(d.horas).padStart(2, '0');
-  const mm = String(d.minutos).padStart(2, '0');
-  const ss = String(d.segundos).padStart(2, '0');
+/** "12d 04h 03m 20s" — compact format for the live counter. */
+export function formatDurationCounter(d: Duration): string {
+  const dd = String(d.days);
+  const hh = String(d.hours).padStart(2, '0');
+  const mm = String(d.minutes).padStart(2, '0');
+  const ss = String(d.seconds).padStart(2, '0');
   return `${dd}d ${hh}h ${mm}m ${ss}s`;
 }
 
 /**
- * Cuenta regresiva hacia el próximo día completo: "hh:mm:ss" que falta para que
- * el anillo de 24 h se complete. Recibe el total transcurrido en ms.
+ * Countdown toward the next full day: "hh:mm:ss" left for the 24h ring to
+ * complete. Receives the total elapsed time in ms.
  */
-export function cuentaRegresivaDia(totalMs: number): string {
-  const restanteMs = 86_400_000 - (totalMs % 86_400_000);
-  const totalSeg = Math.floor(restanteMs / 1000) % 86_400; // 24:00:00 → 00:00:00
-  const hh = String(Math.floor(totalSeg / 3600)).padStart(2, '0');
-  const mm = String(Math.floor((totalSeg % 3600) / 60)).padStart(2, '0');
-  const ss = String(totalSeg % 60).padStart(2, '0');
+export function dayCountdown(totalMs: number): string {
+  const remainingMs = 86_400_000 - (totalMs % 86_400_000);
+  const totalSec = Math.floor(remainingMs / 1000) % 86_400; // 24:00:00 → 00:00:00
+  const hh = String(Math.floor(totalSec / 3600)).padStart(2, '0');
+  const mm = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+  const ss = String(totalSec % 60).padStart(2, '0');
   return `${hh}:${mm}:${ss}`;
 }
 
-/** "12 días" / "1 día" / "5 horas" — texto humano y corto. */
-export function formatDuracionHumana(d: Duracion): string {
-  if (d.dias >= 1) return `${d.dias} ${d.dias === 1 ? 'día' : 'días'}`;
-  if (d.horas >= 1) return `${d.horas} ${d.horas === 1 ? 'hora' : 'horas'}`;
-  if (d.minutos >= 1)
-    return `${d.minutos} ${d.minutos === 1 ? 'minuto' : 'minutos'}`;
-  return 'recién';
+/** "12 days" / "1 day" / "5 hours" — short, human text. */
+export function formatHumanDuration(d: Duration): string {
+  if (d.days >= 1) return `${d.days} ${d.days === 1 ? 'day' : 'days'}`;
+  if (d.hours >= 1) return `${d.hours} ${d.hours === 1 ? 'hour' : 'hours'}`;
+  if (d.minutes >= 1) return `${d.minutes} ${d.minutes === 1 ? 'minute' : 'minutes'}`;
+  return 'just now';
 }
 
-export function formatFecha(iso: string): string {
+export function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(LOCALE, {
     day: '2-digit',
     month: '2-digit',
@@ -77,7 +73,7 @@ export function formatFecha(iso: string): string {
   });
 }
 
-export function formatFechaHora(iso: string): string {
+export function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString(LOCALE, {
     day: '2-digit',
     month: '2-digit',
@@ -87,22 +83,22 @@ export function formatFechaHora(iso: string): string {
   });
 }
 
-/** "hace 2 horas", "hace 3 días"… usando Intl.RelativeTimeFormat. */
-export function formatFechaRelativa(iso: string, ahora: Date = new Date()): string {
+/** "2 hours ago", "3 days ago"… using Intl.RelativeTimeFormat. */
+export function formatRelativeDate(iso: string, now: Date = new Date()): string {
   const rtf = new Intl.RelativeTimeFormat(LOCALE, { numeric: 'auto' });
-  const diffMs = new Date(iso).getTime() - ahora.getTime();
-  const diffSeg = Math.round(diffMs / 1000);
-  const abs = Math.abs(diffSeg);
+  const diffMs = new Date(iso).getTime() - now.getTime();
+  const diffSec = Math.round(diffMs / 1000);
+  const abs = Math.abs(diffSec);
 
-  if (abs < 60) return rtf.format(Math.round(diffSeg), 'second');
-  if (abs < 3600) return rtf.format(Math.round(diffSeg / 60), 'minute');
-  if (abs < 86400) return rtf.format(Math.round(diffSeg / 3600), 'hour');
-  if (abs < 2_592_000) return rtf.format(Math.round(diffSeg / 86400), 'day');
-  return rtf.format(Math.round(diffSeg / 2_592_000), 'month');
+  if (abs < 60) return rtf.format(Math.round(diffSec), 'second');
+  if (abs < 3600) return rtf.format(Math.round(diffSec / 60), 'minute');
+  if (abs < 86400) return rtf.format(Math.round(diffSec / 3600), 'hour');
+  if (abs < 2_592_000) return rtf.format(Math.round(diffSec / 86400), 'day');
+  return rtf.format(Math.round(diffSec / 2_592_000), 'month');
 }
 
-/** Devuelve YYYY-MM-DD (clave de día) en horario local, para agrupar por jornada. */
-export function claveDia(iso: string): string {
+/** Returns YYYY-MM-DD (day key) in local time, to group by day. */
+export function dayKey(iso: string): string {
   const d = new Date(iso);
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -110,8 +106,8 @@ export function claveDia(iso: string): string {
   return `${y}-${m}-${day}`;
 }
 
-/** Valor por defecto para inputs datetime-local (ahora, en horario local). */
-export function ahoraParaInput(): string {
+/** Default value for datetime-local inputs (now, in local time). */
+export function nowForInput(): string {
   const d = new Date();
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().slice(0, 16);

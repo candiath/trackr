@@ -1,8 +1,8 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 
-// Componente Card tal cual lo entrega shadcn/ui (sin personalizaciones), para
-// que el aspecto coincida exactamente con el del sitio oficial.
+// Card component exactly as shadcn/ui ships it (no customizations), so the look
+// matches the official site precisely.
 
 function Card({ className, ...props }: React.ComponentProps<'div'>) {
   return (

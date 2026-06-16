@@ -6,9 +6,9 @@ export function NotFoundPage() {
   return (
     <div className="flex flex-col items-center gap-4 py-24 text-center">
       <p className="text-5xl font-bold">404</p>
-      <p className="text-muted-foreground">No encontramos esta página.</p>
+      <p className="text-muted-foreground">We couldn't find this page.</p>
       <Link to="/" className={cn(buttonVariants())}>
-        Volver al inicio
+        Back to home
       </Link>
     </div>
   );

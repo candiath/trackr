@@ -2,16 +2,16 @@ import { type CSSProperties } from 'react';
 import { cn } from '@/lib/utils';
 
 interface ProgressProps {
-  /** Valor 0..100. */
+  /** Value 0..100. */
   value: number;
   className?: string;
   indicatorClassName?: string;
-  /** Permite pintar el indicador con el color de la conducta (estilo inline). */
+  /** Lets you paint the indicator with the behavior's color (inline style). */
   indicatorStyle?: CSSProperties;
 }
 
-// Barra de progreso mínima (sin Base UI: es puramente visual y no necesita
-// semántica interactiva). Se usa para los hitos de sobriedad.
+// Minimal progress bar (no Base UI: it's purely visual and needs no interactive
+// semantics). Used for the sobriety milestones.
 export function Progress({
   value,
   className,

@@ -1,0 +1,82 @@
+// Track API data model. Mirrors the plain types in @track/shared (English).
+// Streaks are NOT stored: they are derived on the client from the event history.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Intensity {
+  MILD
+  MODERATE
+  INTENSE
+}
+
+enum MoodLevel {
+  VERY_GOOD
+  GOOD
+  OKAY
+  BAD
+  VERY_BAD
+}
+
+/// A behavior the user wants to abstain from (alcohol, tobacco, …).
+model Relapse {
+  id          String         @id @default(cuid())
+  name        String
+  description String?
+  color       String
+  icon        String
+  startDate   DateTime
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  events      RelapseEvent[]
+}
+
+/// A concrete relapse (one event on a behavior's timeline).
+model RelapseEvent {
+  id        String     @id @default(cuid())
+  relapseId String
+  relapse   Relapse    @relation(fields: [relapseId], references: [id], onDelete: Cascade)
+  date      DateTime
+  triggerId String?
+  trigger   Trigger?   @relation(fields: [triggerId], references: [id], onDelete: SetNull)
+  intensity Intensity?
+  moodLevel MoodLevel?
+  notes     String?
+  createdAt DateTime   @default(now())
+
+  @@index([relapseId])
+}
+
+/// Global catalog of relapse triggers (stress, boredom, …).
+model Trigger {
+  id        String         @id @default(cuid())
+  name      String         @unique
+  isSystem  Boolean        @default(false)
+  createdAt DateTime       @default(now())
+  events    RelapseEvent[]
+}
+
+/// A mood entry. Several per day are allowed.
+model MoodEntry {
+  id        String       @id @default(cuid())
+  date      DateTime
+  level     MoodLevel
+  note      String?
+  createdAt DateTime     @default(now())
+  factors   MoodFactor[] @relation("MoodEntryFactors")
+}
+
+/// Global catalog of mood factors (sleep, work, …).
+model MoodFactor {
+  id        String      @id @default(cuid())
+  name      String      @unique
+  isSystem  Boolean     @default(false)
+  createdAt DateTime    @default(now())
+  entries   MoodEntry[] @relation("MoodEntryFactors")
+}

@@ -4,51 +4,50 @@ import { toast } from 'sonner';
 import type { MoodEntry } from '@track/shared';
 import { moodApi, moodKeys } from '@/services/mood';
 import { MOOD_META } from '@/lib/mood';
-import { agruparPorDia } from '@/lib/mood-stats';
-import { formatFecha } from '@/lib/format';
+import { groupByDay } from '@/lib/mood-stats';
+import { formatDate } from '@/lib/format';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
-function hora(iso: string): string {
-  return new Date(iso).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+function time(iso: string): string {
+  return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 }
 
 /**
- * Línea de tiempo de moods agrupada por día. Recibe las entradas ya ordenadas
- * (desc) del service; mantenemos ese orden al agrupar para mostrar lo más
- * reciente arriba.
+ * Mood timeline grouped by day. Receives the entries already sorted (desc) from
+ * the service; we keep that order when grouping to show the most recent on top.
  */
 export function MoodTimeline({ entries }: { entries: MoodEntry[] }) {
   const qc = useQueryClient();
 
-  const eliminar = useMutation({
+  const remove = useMutation({
     mutationFn: (id: string) => moodApi.remove(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: moodKeys.all });
-      toast.success('Registro eliminado');
+      toast.success('Entry deleted');
     },
   });
 
   if (entries.length === 0) {
     return (
       <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-        Todavía no registraste tu ánimo. Empezá con el botón de arriba.
+        You haven't logged your mood yet. Start with the button above.
       </p>
     );
   }
 
-  const porDia = [...agruparPorDia(entries).entries()];
+  const byDay = [...groupByDay(entries).entries()];
 
   return (
     <div className="space-y-5">
-      {porDia.map(([dia, items]) => (
-        <div key={dia} className="space-y-2">
+      {byDay.map(([day, items]) => (
+        <div key={day} className="space-y-2">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            {formatFecha(items[0].fecha)}
+            {formatDate(items[0].date)}
           </p>
           <ul className="space-y-2">
             {items.map((e) => {
-              const meta = MOOD_META[e.nivel];
+              const meta = MOOD_META[e.level];
               return (
                 <li
                   key={e.id}
@@ -64,12 +63,12 @@ export function MoodTimeline({ entries }: { entries: MoodEntry[] }) {
                   <div className="min-w-0 flex-1 space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium">{meta.label}</span>
-                      <span className="text-xs text-muted-foreground">{hora(e.fecha)}</span>
+                      <span className="text-xs text-muted-foreground">{time(e.date)}</span>
                     </div>
-                    {e.nota && <p className="text-sm text-muted-foreground">{e.nota}</p>}
-                    {e.factoresNombres && e.factoresNombres.length > 0 && (
+                    {e.note && <p className="text-sm text-muted-foreground">{e.note}</p>}
+                    {e.factorNames && e.factorNames.length > 0 && (
                       <div className="flex flex-wrap gap-1 pt-0.5">
-                        {e.factoresNombres.map((f) => (
+                        {e.factorNames.map((f) => (
                           <Badge key={f} variant="secondary">
                             {f}
                           </Badge>
@@ -80,9 +79,9 @@ export function MoodTimeline({ entries }: { entries: MoodEntry[] }) {
                   <Button
                     variant="ghost"
                     size="icon"
-                    aria-label="Eliminar registro"
-                    disabled={eliminar.isPending}
-                    onClick={() => eliminar.mutate(e.id)}
+                    aria-label="Delete entry"
+                    disabled={remove.isPending}
+                    onClick={() => remove.mutate(e.id)}
                   >
                     <Trash2 className="text-muted-foreground" />
                   </Button>

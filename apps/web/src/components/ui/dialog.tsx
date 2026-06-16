@@ -4,10 +4,10 @@ import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /**
- * Wrapper de Dialog sobre Base UI. Exponemos piezas con nombres tipo shadcn
- * (DialogContent, DialogHeader…) para que las vistas no toquen la estructura de
- * Portal/Backdrop/Popup en cada uso. Las transiciones usan los data-attributes
- * de Base UI (starting-style / ending-style) para animar entrada y salida.
+ * Dialog wrapper over Base UI. We expose pieces with shadcn-like names
+ * (DialogContent, DialogHeader…) so views don't touch the Portal/Backdrop/Popup
+ * structure at every use. Transitions use Base UI's data-attributes
+ * (starting-style / ending-style) to animate enter and exit.
  */
 export const Dialog = BaseDialog.Root;
 export const DialogTrigger = BaseDialog.Trigger;

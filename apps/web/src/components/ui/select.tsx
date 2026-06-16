@@ -18,11 +18,11 @@ interface SelectProps {
 }
 
 /**
- * Select "todo en uno" sobre Base UI. Lo dejamos cerrado (recibe `options` y
- * arma trigger + popup) porque en esta app siempre se elige un string de una
- * lista conocida; no hace falta componer cada parte a mano. Pasamos `items` al
- * Root para que <Select.Value> muestre la etiqueta del valor elegido, y
- * `alignItemWithTrigger={false}` para un dropdown clásico (debajo del trigger).
+ * "All in one" Select over Base UI. We keep it closed (it receives `options` and
+ * builds trigger + popup) because in this app you always pick a string from a known
+ * list; there's no need to compose each part by hand. We pass `items` to the Root
+ * so <Select.Value> shows the chosen value's label, and `alignItemWithTrigger={false}`
+ * for a classic dropdown (below the trigger).
  */
 export function Select({
   value,

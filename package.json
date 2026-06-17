@@ -13,6 +13,7 @@
     "dev:api": "npm run dev -w @track/api",
     "dev:web": "npm run dev -w @track/web",
     "build": "npm run build -w @track/shared && npm run build -w @track/api && npm run build -w @track/web",
+    "test": "npm run test -w @track/api && npm run test -w @track/web",
     "lint": "npm run lint -w @track/web"
   },
   "devDependencies": {

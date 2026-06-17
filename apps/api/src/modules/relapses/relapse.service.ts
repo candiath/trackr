@@ -1,4 +1,5 @@
-import type { RelapseFormData } from '@track/shared';
+import type { Prisma } from '@prisma/client';
+import type { RelapseFormData, RelapseUpdateData } from '@track/shared';
 import { notFound } from '../../lib/http-error';
 import { relapseRepository } from './relapse.repository';
 import { toRelapseDTO } from './relapse.mapper';
@@ -26,15 +27,20 @@ export const relapseService = {
     return toRelapseDTO(row);
   },
 
-  async update(id: string, input: RelapseFormData) {
+  async update(id: string, input: RelapseUpdateData) {
     await relapseService.getById(id); // throws 404 if missing
-    const row = await relapseRepository.update(id, {
-      name: input.name,
-      description: input.description ?? null,
-      color: input.color,
-      icon: input.icon,
-      startDate: input.startDate ? new Date(input.startDate) : undefined,
-    });
+
+    // Partial update: only touch the fields actually present in the request, so
+    // omitting `description` keeps the stored value instead of wiping it to null.
+    // (The native client may send any subset of the form.)
+    const data: Prisma.RelapseUpdateInput = {};
+    if (input.name !== undefined) data.name = input.name;
+    if (input.description !== undefined) data.description = input.description ?? null;
+    if (input.color !== undefined) data.color = input.color;
+    if (input.icon !== undefined) data.icon = input.icon;
+    if (input.startDate !== undefined) data.startDate = new Date(input.startDate);
+
+    const row = await relapseRepository.update(id, data);
     return toRelapseDTO(row);
   },
 

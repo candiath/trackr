@@ -64,3 +64,9 @@ export type MoodEntryFormData = z.infer<typeof moodEntryCreateSchema>;
 /** Update = all fields optional (project pattern). */
 export const moodEntryUpdateSchema = moodEntryCreateSchema.partial();
 export type MoodEntryUpdateData = z.infer<typeof moodEntryUpdateSchema>;
+
+/** Create a mood factor in the catalog (free text typed by the user). */
+export const factorCreateSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(60),
+});
+export type FactorFormData = z.infer<typeof factorCreateSchema>;

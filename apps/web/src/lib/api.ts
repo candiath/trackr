@@ -6,7 +6,13 @@
  * Authorization header is added HERE and nowhere else. Per-entity services only
  * declare routes; they don't repeat fetch logic.
  */
-const BASE_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? '';
+// Strip any trailing slash from the configured base URL: every `path` below
+// already starts with "/", so a base like "https://host/" would otherwise produce
+// a double slash ("https://host//api/…") that the server 404s on.
+const BASE_URL = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').replace(
+  /\/+$/,
+  '',
+);
 
 /**
  * Error thrown by the HTTP client. Carries the HTTP `status` (0 when the request

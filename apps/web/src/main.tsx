@@ -20,23 +20,41 @@ import '@/index.css';
 // A single QueryClient for the whole app. Moderate staleTime to avoid over-
 // fetching; no refetch on window focus because in a personal-use app it bothers
 // more than it helps.
-//
-// One toast when the API/DB is unreachable (network failure or a 503 from the
-// backend), wired into both caches so reads (queries) and writes (mutations)
-// trigger it. A fixed toast id deduplicates it, so several requests failing at
-// once don't stack identical toasts.
-function notifyIfUnreachable(error: unknown): void {
+
+/** Toast for the "API/DB unreachable" case, deduplicated by a fixed id. */
+function toastUnreachable(): void {
+  toast.error("Can't reach the database", {
+    id: 'db-unreachable',
+    description: 'Check that the API and the database are running.',
+  });
+}
+
+/**
+ * Queries (reads): only surface the unreachable case. Ordinary read failures are
+ * shown inline by the pages, so we don't toast every failed background refetch.
+ */
+function onQueryError(error: unknown): void {
+  if (error instanceof ApiError && error.isUnreachable) toastUnreachable();
+}
+
+/**
+ * Mutations (writes): surface EVERY failure. A user action (create/delete/…) that
+ * fails silently is the worst outcome, so any error gets a toast — the specific
+ * unreachable message, or the backend's error message for the rest.
+ */
+function onMutationError(error: unknown): void {
   if (error instanceof ApiError && error.isUnreachable) {
-    toast.error("Can't reach the database", {
-      id: 'db-unreachable',
-      description: 'Check that the API and the database are running.',
-    });
+    toastUnreachable();
+    return;
   }
+  toast.error('Something went wrong', {
+    description: error instanceof Error ? error.message : 'Please try again.',
+  });
 }
 
 const queryClient = new QueryClient({
-  queryCache: new QueryCache({ onError: notifyIfUnreachable }),
-  mutationCache: new MutationCache({ onError: notifyIfUnreachable }),
+  queryCache: new QueryCache({ onError: onQueryError }),
+  mutationCache: new MutationCache({ onError: onMutationError }),
   defaultOptions: {
     queries: { staleTime: 30_000, refetchOnWindowFocus: false },
   },

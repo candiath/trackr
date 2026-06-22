@@ -7,5 +7,6 @@ export function toFactorDTO(f: PrismaMoodFactor): MoodFactor {
     name: f.name,
     isSystem: f.isSystem,
     createdAt: f.createdAt.toISOString(),
+    updatedAt: f.updatedAt.toISOString(),
   };
 }

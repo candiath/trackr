@@ -15,5 +15,6 @@ export function toRelapseEventDTO(e: EventWithTrigger): RelapseEvent {
     moodLevel: e.moodLevel,
     notes: e.notes,
     createdAt: e.createdAt.toISOString(),
+    updatedAt: e.updatedAt.toISOString(),
   };
 }

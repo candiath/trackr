@@ -27,6 +27,7 @@ function event(daysAgo: number, triggerName?: string): RelapseEvent {
     date: new Date(NOW.getTime() - daysAgo * DAY).toISOString(),
     triggerName: triggerName ?? null,
     createdAt: NOW.toISOString(),
+    updatedAt: NOW.toISOString(),
   };
 }
 

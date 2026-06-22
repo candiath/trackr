@@ -7,5 +7,6 @@ export function toTriggerDTO(t: PrismaTrigger): Trigger {
     name: t.name,
     isSystem: t.isSystem,
     createdAt: t.createdAt.toISOString(),
+    updatedAt: t.updatedAt.toISOString(),
   };
 }

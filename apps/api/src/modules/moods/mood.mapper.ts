@@ -13,5 +13,6 @@ export function toMoodEntryDTO(m: MoodWithFactors): MoodEntry {
     factors: m.factors.map((f) => f.id),
     factorNames: m.factors.map((f) => f.name),
     createdAt: m.createdAt.toISOString(),
+    updatedAt: m.updatedAt.toISOString(),
   };
 }

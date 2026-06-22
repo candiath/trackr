@@ -8,3 +8,4 @@
 export * from './common';
 export * from './mood';
 export * from './relapse';
+export * from './sync';

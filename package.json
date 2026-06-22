@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "description": "Track — productivity and wellbeing (tasks, habits, relapses and mood)",
+  "engines": {
+    "node": ">=20.11"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"

@@ -19,6 +19,8 @@ export interface Trigger {
   name: string;
   isSystem: boolean;
   createdAt: string;
+  /** Last write, ISO. Drives the sync conflict detection (changed since lastSync). */
+  updatedAt: string;
 }
 
 /**
@@ -58,6 +60,8 @@ export interface RelapseEvent {
   moodLevel?: z.infer<typeof moodLevelSchema> | null;
   notes?: string | null;
   createdAt: string;
+  /** Last write, ISO. Drives the sync conflict detection (changed since lastSync). */
+  updatedAt: string;
 }
 
 /* ----------------------------- Form schemas ----------------------------- */

@@ -2,6 +2,7 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { LayoutDashboard, ShieldCheck, SmilePlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from './theme-toggle';
+import { SyncButton } from '@/components/sync/sync-button';
 
 /**
  * Main navigation. Centralized in an array so adding a section (e.g. Tasks/Habits
@@ -50,16 +51,22 @@ export function AppLayout() {
             </NavLink>
           ))}
         </nav>
-        <div className="flex items-center justify-between border-t border-border pt-4">
-          <span className="px-2 text-xs text-muted-foreground">Theme</span>
-          <ThemeToggle />
+        <div className="flex flex-col gap-3 border-t border-border pt-4">
+          <SyncButton />
+          <div className="flex items-center justify-between">
+            <span className="px-2 text-xs text-muted-foreground">Theme</span>
+            <ThemeToggle />
+          </div>
         </div>
       </aside>
 
       {/* Top bar on mobile (md:hidden). */}
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-card/80 px-4 py-3 backdrop-blur md:hidden">
         <Logo />
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          <SyncButton />
+          <ThemeToggle />
+        </div>
       </header>
       <nav className="sticky top-[57px] z-20 flex gap-1 overflow-x-auto border-b border-border bg-card/80 px-2 py-2 backdrop-blur md:hidden">
         {NAV.map(({ to, label, Icon, end }) => (

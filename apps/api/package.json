@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
+    "start:prod": "prisma migrate deploy && tsx src/server.ts",
     "build": "prisma generate",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",

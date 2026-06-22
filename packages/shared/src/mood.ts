@@ -29,6 +29,8 @@ export interface MoodFactor {
   name: string;
   isSystem: boolean;
   createdAt: string;
+  /** Last write, ISO. Drives the sync conflict detection (changed since lastSync). */
+  updatedAt: string;
 }
 
 /**
@@ -45,6 +47,8 @@ export interface MoodEntry {
   /** Already-resolved names, to list without fetching the catalog separately. */
   factorNames?: string[];
   createdAt: string;
+  /** Last write, ISO. Drives the sync conflict detection (changed since lastSync). */
+  updatedAt: string;
 }
 
 /**

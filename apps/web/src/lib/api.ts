@@ -14,6 +14,10 @@ const BASE_URL = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').re
   '',
 );
 
+// Shared secret that gates the API (reached over the private tailnet). Sent on
+// every request; the only consumer of this client now is the sync layer.
+const SYNC_SECRET = import.meta.env.VITE_SYNC_SECRET as string | undefined;
+
 /**
  * Error thrown by the HTTP client. Carries the HTTP `status` (0 when the request
  * never reached the server, e.g. the API is down or offline) so callers — notably
@@ -45,7 +49,10 @@ async function request<T>(
   try {
     res = await fetch(`${BASE_URL}${path}`, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(SYNC_SECRET ? { 'X-Sync-Secret': SYNC_SECRET } : {}),
+      },
       // Only serialize when there is a body: a GET/DELETE shouldn't send one.
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });

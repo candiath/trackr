@@ -197,7 +197,7 @@ export function BehaviorFormDialog({
 
           <div className="space-y-1.5">
             <Label htmlFor="startDate">Clean since…</Label>
-            <Input id="startDate" type="date" {...register('startDate')} />
+            <Input id="startDate" type="datetime-local" {...register('startDate')} />
             {errors.startDate && (
               <p className="text-xs text-destructive">{errors.startDate.message}</p>
             )}

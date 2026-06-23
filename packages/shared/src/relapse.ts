@@ -10,6 +10,15 @@ export const intensitySchema = z.enum(['MILD', 'MODERATE', 'INTENSE']);
 export type Intensity = z.infer<typeof intensitySchema>;
 
 /**
+ * What a logged event represents:
+ *  - `RELAPSE`: the user actually did the behavior — resets the streak.
+ *  - `URGE`: a temptation the user logged (and ideally resisted) — does NOT reset
+ *    the streak; recorded for awareness and to show a motivational message.
+ */
+export const eventKindSchema = z.enum(['RELAPSE', 'URGE']);
+export type EventKind = z.infer<typeof eventKindSchema>;
+
+/**
  * Trigger (reason) for a relapse. It is a global catalog shared across every
  * behavior, because "stress" or "boredom" apply to any of them and that way the
  * stats aggregate well. `isSystem` separates predefined ones from user-created.
@@ -53,6 +62,8 @@ export interface Relapse {
 export interface RelapseEvent {
   id: string;
   relapseId: string;
+  /** Whether this is an actual relapse or a resisted urge. */
+  kind: EventKind;
   date: string; // ISO datetime of the relapse
   triggerId?: string | null;
   triggerName?: string | null;

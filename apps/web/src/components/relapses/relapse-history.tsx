@@ -42,7 +42,7 @@ export function RelapseHistory({ relapseId }: { relapseId: string }) {
   if (events.length === 0) {
     return (
       <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-        No relapses logged yet. Keep it up! 🎉
+        Nothing logged yet. Keep it up! 🎉
       </p>
     );
   }
@@ -59,6 +59,11 @@ export function RelapseHistory({ relapseId }: { relapseId: string }) {
             <div className="space-y-1.5">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-sm font-medium">{formatDateTime(e.date)}</span>
+                {e.kind === 'URGE' && (
+                  <Badge className="border-transparent bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                    Urge resisted
+                  </Badge>
+                )}
                 {e.triggerName && <Badge variant="secondary">{e.triggerName}</Badge>}
                 {e.intensity && (
                   <Badge variant="outline">{INTENSITY_LABEL[e.intensity]}</Badge>

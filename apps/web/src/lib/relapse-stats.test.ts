@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Relapse, RelapseEvent } from '@track/shared';
+import type { EventKind, Relapse, RelapseEvent } from '@track/shared';
 import {
   computeMilestones,
   nextMilestone,
@@ -20,10 +20,15 @@ const behavior: Relapse = {
   updatedAt: NOW.toISOString(),
 };
 
-function event(daysAgo: number, triggerName?: string): RelapseEvent {
+function event(
+  daysAgo: number,
+  triggerName?: string,
+  kind: EventKind = 'RELAPSE',
+): RelapseEvent {
   return {
-    id: `e-${daysAgo}`,
+    id: `${kind === 'URGE' ? 'u' : 'e'}-${daysAgo}`,
     relapseId: 'b1',
+    kind,
     date: new Date(NOW.getTime() - daysAgo * DAY).toISOString(),
     triggerName: triggerName ?? null,
     createdAt: NOW.toISOString(),
@@ -83,6 +88,25 @@ describe('relapseSummary', () => {
     const snapshot = events.map((e) => e.id);
     relapseSummary(behavior, events, NOW);
     expect(events.map((e) => e.id)).toEqual(snapshot);
+  });
+
+  it('urges do not reset the streak and are counted separately', () => {
+    // Last relapse 40 days ago + a resisted urge 2 days ago. The streak must run
+    // from the relapse (40d), ignoring the urge, which is only counted.
+    const s = relapseSummary(behavior, [event(40), event(2, 'Craving', 'URGE')], NOW);
+
+    expect(s.currentStreak.days).toBe(40);
+    expect(s.lastRelapse?.id).toBe('e-40');
+    expect(s.totalRelapses).toBe(1);
+    expect(s.urgesResisted).toBe(1);
+  });
+
+  it('with only urges the streak runs from startDate', () => {
+    const s = relapseSummary(behavior, [event(5, undefined, 'URGE')], NOW);
+
+    expect(s.currentStreakStart).toBe(behavior.startDate);
+    expect(s.totalRelapses).toBe(0);
+    expect(s.urgesResisted).toBe(1);
   });
 });
 

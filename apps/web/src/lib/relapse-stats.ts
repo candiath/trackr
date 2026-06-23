@@ -33,6 +33,8 @@ export interface RelapseSummary {
   totalRelapses: number;
   mostCommonTrigger: string | null;
   averageDaysBetweenRelapses: number | null;
+  /** Count of logged temptations (kind URGE) — they never reset the streak. */
+  urgesResisted: number;
 }
 
 /**
@@ -46,7 +48,11 @@ export function relapseSummary(
   events: RelapseEvent[],
   now: Date = new Date(),
 ): RelapseSummary {
-  const sorted = [...events].sort(
+  // Only actual relapses drive the streak/stats; urges are resisted temptations
+  // that must NOT reset the counter.
+  const relapses = events.filter((e) => e.kind === 'RELAPSE');
+  const urgesResisted = events.reduce((n, e) => (e.kind === 'URGE' ? n + 1 : n), 0);
+  const sorted = [...relapses].sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
   );
   const last = sorted.at(-1) ?? null;
@@ -96,6 +102,7 @@ export function relapseSummary(
     totalRelapses: sorted.length,
     mostCommonTrigger,
     averageDaysBetweenRelapses,
+    urgesResisted,
   };
 }
 

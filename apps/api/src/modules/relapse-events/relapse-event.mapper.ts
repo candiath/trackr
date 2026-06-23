@@ -8,6 +8,7 @@ export function toRelapseEventDTO(e: EventWithTrigger): RelapseEvent {
   return {
     id: e.id,
     relapseId: e.relapseId,
+    kind: e.kind,
     date: e.date.toISOString(),
     triggerId: e.triggerId,
     triggerName: e.trigger?.name ?? null,

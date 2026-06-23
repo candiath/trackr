@@ -9,6 +9,8 @@ import {
   Pencil,
   Repeat,
   RotateCcw,
+  ShieldAlert,
+  ShieldCheck,
   Trash2,
   Trophy,
 } from 'lucide-react';
@@ -30,12 +32,14 @@ import { CounterRing } from '@/components/relapses/counter-ring';
 import { Milestones } from '@/components/relapses/milestones';
 import { RelapseHistory } from '@/components/relapses/relapse-history';
 import { LogRelapseDialog } from '@/components/relapses/log-relapse-dialog';
+import { ResistUrgeDialog } from '@/components/relapses/resist-urge-dialog';
 import { BehaviorFormDialog } from '@/components/relapses/behavior-form-dialog';
 import { DeleteBehaviorDialog } from '@/components/relapses/delete-behavior-dialog';
 
 export function RelapseDetailPage() {
   const { id = '' } = useParams();
   const [logOpen, setLogOpen] = useState(false);
+  const [urgeOpen, setUrgeOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const now = useNow(60_000);
@@ -73,6 +77,7 @@ export function RelapseDetailPage() {
 
   const stats = [
     { label: 'Total relapses', value: String(summary.totalRelapses), Icon: Repeat },
+    { label: 'Urges resisted', value: String(summary.urgesResisted), Icon: ShieldCheck },
     {
       label: 'Best streak',
       value: summary.bestStreakDays >= 1 ? `${Math.floor(summary.bestStreakDays)} days` : '—',
@@ -150,10 +155,16 @@ export function RelapseDetailPage() {
             <p className="text-xs uppercase tracking-wide text-muted-foreground">
               Time without relapsing · the ring completes every 24h
             </p>
-            <Button variant="outline" onClick={() => setLogOpen(true)}>
-              <RotateCcw />
-              I had a relapse
-            </Button>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button onClick={() => setUrgeOpen(true)}>
+                <ShieldAlert />
+                I'm tempted
+              </Button>
+              <Button variant="outline" onClick={() => setLogOpen(true)}>
+                <RotateCcw />
+                I had a relapse
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -195,6 +206,12 @@ export function RelapseDetailPage() {
         relapse={relapse}
         open={logOpen}
         onOpenChange={setLogOpen}
+      />
+      <ResistUrgeDialog
+        relapse={relapse}
+        streakDays={Math.floor(summary.currentStreak.totalDays)}
+        open={urgeOpen}
+        onOpenChange={setUrgeOpen}
       />
       <BehaviorFormDialog
         relapse={relapse}

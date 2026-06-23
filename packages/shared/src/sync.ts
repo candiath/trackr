@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { intensitySchema } from './relapse';
+import { eventKindSchema, intensitySchema } from './relapse';
 import { moodLevelSchema } from './mood';
 
 /**
@@ -30,6 +30,8 @@ export const syncRelapseSchema = z.object({
 export const syncRelapseEventSchema = z.object({
   id: z.string(),
   relapseId: z.string(),
+  // Optional with a default so older clients/rows (pre-urges) parse as relapses.
+  kind: eventKindSchema.default('RELAPSE'),
   date: z.string(),
   triggerName: z.string().nullable().optional(),
   intensity: intensitySchema.nullable().optional(),

@@ -32,6 +32,7 @@ function toSyncEvent(e: EventWithTrigger): SyncRelapseEvent {
   return {
     id: e.id,
     relapseId: e.relapseId,
+    kind: e.kind,
     date: iso(e.date),
     triggerName: e.trigger?.name ?? null,
     intensity: e.intensity,
@@ -124,6 +125,7 @@ export const syncService = {
     for (const e of payload.relapseEvents) {
       const triggerId = e.triggerName ? await triggerIdByName(e.triggerName) : null;
       const data = {
+        kind: e.kind,
         date: new Date(e.date),
         triggerId,
         intensity: e.intensity ?? null,

@@ -166,6 +166,7 @@ async function applyPulledEvent(e: SyncRelapseEvent): Promise<void> {
   const row: StoredRelapseEvent = {
     id: e.id,
     relapseId: e.relapseId,
+    kind: e.kind,
     date: e.date,
     triggerId,
     intensity: e.intensity ?? null,
@@ -217,6 +218,7 @@ async function toSyncEvent(e: StoredRelapseEvent): Promise<SyncRelapseEvent> {
   return {
     id: e.id,
     relapseId: e.relapseId,
+    kind: e.kind,
     date: e.date,
     triggerName: trigger?.name ?? null,
     intensity: e.intensity ?? null,

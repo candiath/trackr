@@ -7,6 +7,7 @@ import {
   type StoredRelapseEvent,
 } from '@/lib/db';
 import type {
+  EventKind,
   Relapse,
   RelapseEvent,
   RelapseEventFormData,
@@ -107,7 +108,11 @@ export const relapseEventApi = {
     return Promise.all(rows.map(toEventDTO));
   },
 
-  async create(relapseId: string, data: RelapseEventFormData): Promise<RelapseEvent> {
+  async create(
+    relapseId: string,
+    data: RelapseEventFormData,
+    kind: EventKind = 'RELAPSE',
+  ): Promise<RelapseEvent> {
     const parent = await db.relapses.get(relapseId);
     if (!parent || parent.deletedAt) throw new Error('Behavior not found');
 
@@ -126,6 +131,7 @@ export const relapseEventApi = {
     const row: StoredRelapseEvent = {
       id: newId(),
       relapseId,
+      kind,
       date: new Date(data.date).toISOString(),
       triggerId,
       intensity: data.intensity ?? null,

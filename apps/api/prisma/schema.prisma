@@ -24,6 +24,14 @@ enum MoodLevel {
   VERY_BAD
 }
 
+/// What a RelapseEvent represents: an actual relapse (resets the streak) or an
+/// URGE — a temptation the user logged and (ideally) resisted, which does NOT
+/// reset the streak.
+enum EventKind {
+  RELAPSE
+  URGE
+}
+
 /// A behavior the user wants to abstain from (alcohol, tobacco, …).
 model Relapse {
   id          String         @id @default(cuid())
@@ -45,6 +53,7 @@ model RelapseEvent {
   id        String     @id @default(cuid())
   relapseId String
   relapse   Relapse    @relation(fields: [relapseId], references: [id], onDelete: Cascade)
+  kind      EventKind  @default(RELAPSE)
   date      DateTime
   triggerId String?
   trigger   Trigger?   @relation(fields: [triggerId], references: [id], onDelete: SetNull)

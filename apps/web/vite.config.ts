@@ -3,7 +3,20 @@ import { defineConfig, type PluginOption } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
+import { execSync } from 'node:child_process';
 import path from 'node:path';
+
+// Build identity, injected at build time so the running app can show exactly which
+// commit it came from. Lets us spot when the PWA service worker is still serving a
+// stale precache (the SHA won't change after a rebuild). Falls back gracefully if
+// git isn't available (e.g. a tarball build).
+function gitSha(): string {
+  try {
+    return execSync('git rev-parse --short HEAD').toString().trim();
+  } catch {
+    return 'unknown';
+  }
+}
 
 // Tailwind v4 integrates as a Vite plugin (no tailwind.config.js: the config
 // lives in the CSS via @theme). React with its plugin for Fast Refresh.
@@ -41,6 +54,10 @@ if (!process.env.VITEST) {
 }
 
 export default defineConfig({
+  define: {
+    __BUILD_SHA__: JSON.stringify(gitSha()),
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+  },
   plugins,
   server: {
     host: true,

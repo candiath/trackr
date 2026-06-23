@@ -26,6 +26,28 @@ function Logo() {
   );
 }
 
+/**
+ * Build identity (commit SHA + build time), so we can confirm at a glance which
+ * version is actually running — and catch the PWA service worker serving a stale
+ * precache (the SHA stops changing across rebuilds when that happens).
+ */
+function BuildInfo() {
+  const built = new Date(__BUILD_TIME__).toLocaleString(undefined, {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return (
+    <p
+      className="px-2 text-[10px] leading-tight text-muted-foreground/70"
+      title={`Built ${new Date(__BUILD_TIME__).toLocaleString()}`}
+    >
+      {__BUILD_SHA__} · {built}
+    </p>
+  );
+}
+
 function navLinkClass({ isActive }: { isActive: boolean }) {
   return cn(
     'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
@@ -57,6 +79,7 @@ export function AppLayout() {
             <span className="px-2 text-xs text-muted-foreground">Theme</span>
             <ThemeToggle />
           </div>
+          <BuildInfo />
         </div>
       </aside>
 
@@ -81,6 +104,10 @@ export function AppLayout() {
       <main className="md:pl-60">
         <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
           <Outlet />
+          {/* Visible on mobile (PWA) where the sidebar footer is hidden. */}
+          <div className="mt-8 flex justify-center md:hidden">
+            <BuildInfo />
+          </div>
         </div>
       </main>
     </div>

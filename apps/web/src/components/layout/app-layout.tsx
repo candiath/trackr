@@ -1,8 +1,10 @@
 import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, ShieldCheck, SmilePlus } from 'lucide-react';
+import { LayoutDashboard, LogOut, ShieldCheck, SmilePlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from './theme-toggle';
 import { SyncButton } from '@/components/sync/sync-button';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/components/auth/auth-provider';
 
 /**
  * Main navigation. Centralized in an array so adding a section (e.g. Tasks/Habits
@@ -48,6 +50,33 @@ function BuildInfo() {
   );
 }
 
+/**
+ * Log out control. RequireAuth redirects to /login as soon as auth state flips, so
+ * there's nothing to navigate here. `iconOnly` renders the compact mobile variant.
+ */
+function LogoutButton({ iconOnly = false }: { iconOnly?: boolean }) {
+  const { logout } = useAuth();
+  if (iconOnly) {
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => void logout()}
+        aria-label="Log out"
+        title="Log out"
+      >
+        <LogOut className="size-4" />
+      </Button>
+    );
+  }
+  return (
+    <Button variant="outline" size="sm" onClick={() => void logout()} className="gap-2">
+      <LogOut className="size-4" />
+      Log out
+    </Button>
+  );
+}
+
 function navLinkClass({ isActive }: { isActive: boolean }) {
   return cn(
     'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
@@ -75,6 +104,7 @@ export function AppLayout() {
         </nav>
         <div className="flex flex-col gap-3 border-t border-border pt-4">
           <SyncButton />
+          <LogoutButton />
           <div className="flex items-center justify-between">
             <span className="px-2 text-xs text-muted-foreground">Theme</span>
             <ThemeToggle />
@@ -89,6 +119,7 @@ export function AppLayout() {
         <div className="flex items-center gap-2">
           <SyncButton />
           <ThemeToggle />
+          <LogoutButton iconOnly />
         </div>
       </header>
       <nav className="sticky top-[57px] z-20 flex gap-1 overflow-x-auto border-b border-border bg-card/80 px-2 py-2 backdrop-blur md:hidden">

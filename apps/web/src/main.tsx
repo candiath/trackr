@@ -10,6 +10,7 @@ import {
 import { toast, Toaster } from 'sonner';
 import { ApiError } from '@/lib/api';
 import { ThemeProvider } from '@/components/theme-provider';
+import { AuthProvider } from '@/components/auth/auth-provider';
 import { App } from '@/App';
 // Geist (variable) fonts. In Vite we load them via Fontsource; the CSS maps the
 // --font-sans / --font-mono tokens to these families (see index.css).
@@ -70,7 +71,9 @@ createRoot(document.getElementById('root')!).render(
     >
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <App />
+          <AuthProvider>
+            <App />
+          </AuthProvider>
         </BrowserRouter>
         {/* theme="system" so toasts follow the active theme. */}
         <Toaster theme="system" richColors position="top-right" closeButton />

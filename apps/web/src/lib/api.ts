@@ -2,9 +2,10 @@
  * Centralized HTTP client: the ONLY place where the frontend talks to the API.
  *
  * Why centralize: the base URL comes from a single env variable, unwrapping
- * { data } / { error } happens in one place and, once auth exists, the
- * Authorization header is added HERE and nowhere else. Per-entity services only
- * declare routes; they don't repeat fetch logic.
+ * { data } / { error } happens in one place, and auth is handled HERE and nowhere
+ * else — the session rides in an httpOnly cookie sent via `credentials: 'include'`,
+ * and a 401 is broadcast so the app can drop to the login screen. Per-entity
+ * services only declare routes; they don't repeat fetch logic.
  */
 // Strip any trailing slash from the configured base URL: every `path` below
 // already starts with "/", so a base like "https://host/" would otherwise produce
@@ -14,9 +15,12 @@ const BASE_URL = ((import.meta.env.VITE_API_URL as string | undefined) ?? '').re
   '',
 );
 
-// Shared secret that gates the API (reached over the private tailnet). Sent on
-// every request; the only consumer of this client now is the sync layer.
-const SYNC_SECRET = import.meta.env.VITE_SYNC_SECRET as string | undefined;
+/**
+ * Broadcast when the API rejects a request as unauthenticated (401): the session
+ * cookie is missing/expired. The auth provider listens for this to clear its state
+ * and redirect to /login, without this module needing to import React or the router.
+ */
+export const UNAUTHORIZED_EVENT = 'track:unauthorized';
 
 /**
  * Error thrown by the HTTP client. Carries the HTTP `status` (0 when the request
@@ -49,10 +53,9 @@ async function request<T>(
   try {
     res = await fetch(`${BASE_URL}${path}`, {
       method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(SYNC_SECRET ? { 'X-Sync-Secret': SYNC_SECRET } : {}),
-      },
+      headers: { 'Content-Type': 'application/json' },
+      // Send the session cookie (the API is credentialed; CORS allows it).
+      credentials: 'include',
       // Only serialize when there is a body: a GET/DELETE shouldn't send one.
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
@@ -73,6 +76,10 @@ async function request<T>(
   // If the response isn't ok, throw with the backend message so TanStack Query
   // catches it and the UI can show something actionable.
   if (!res.ok) {
+    // A 401 means the session is gone/expired: let the app drop to /login.
+    if (res.status === 401 && typeof window !== 'undefined') {
+      window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
+    }
     throw new ApiError(payload.error ?? `Error ${res.status}`, res.status);
   }
 

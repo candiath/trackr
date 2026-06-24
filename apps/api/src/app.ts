@@ -17,9 +17,11 @@ const webDist = path.resolve(process.cwd(), '../web/dist');
 /**
  * Builds the Express app.
  *
- * CORS is restricted to `CORS_ORIGIN` (comma-separated) when set, and otherwise
- * reflects the request origin for local dev. Everything under /api requires the
- * shared sync secret; only /health is public so hosts can health-check without it.
+ * CORS allows the `CORS_ORIGIN` allowlist (comma-separated) when set, and otherwise
+ * only localhost (dev) — it never reflects an arbitrary origin, so a missing
+ * CORS_ORIGIN fails closed. Everything under /api requires a valid session cookie;
+ * /api/auth/* and /health are public so a logged-out client can authenticate and
+ * hosts can health-check.
  *
  * If the web build exists, the same server also serves the PWA (same origin as the
  * API, so no CORS and no mixed-content over Tailscale (DEPRECATED)): static assets first, then a
@@ -29,12 +31,27 @@ const webDist = path.resolve(process.cwd(), '../web/dist');
 export function createApp(): Express {
   const app = express();
 
-  // Credentials are on because auth rides in a cookie. With credentials, the
-  // browser forbids a wildcard origin, so production MUST set CORS_ORIGIN; only in
-  // dev do we reflect the request origin.
-  const origins = process.env.CORS_ORIGIN?.split(',').map((o) => o.trim());
-  console.log('CORS origins:', origins ?? 'reflect request origin');
-  app.use(cors({ origin: origins ?? true, credentials: true }));
+  // Credentials are on because auth rides in a cookie. With credentials, reflecting
+  // an arbitrary origin is unsafe, so we NEVER do it: allow the explicit CORS_ORIGIN
+  // allowlist when set, otherwise only localhost (dev). Forgetting CORS_ORIGIN in
+  // production therefore rejects internet origins (fails closed) instead of opening
+  // the API to every site. Requests without an Origin header (same-origin, curl,
+  // health checks) are not gated.
+  const allowlist = process.env.CORS_ORIGIN?.split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+  const isLocalhost = (origin: string): boolean =>
+    /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+  app.use(
+    cors({
+      credentials: true,
+      origin(origin, cb) { // ?
+        if (!origin) return cb(null, true);
+        if (allowlist?.length) return cb(null, allowlist.includes(origin));
+        return cb(null, isLocalhost(origin));
+      },
+    }),
+  );
   app.use(express.json());
   app.use(cookieParser());
 

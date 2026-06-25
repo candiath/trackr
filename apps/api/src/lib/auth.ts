@@ -2,6 +2,7 @@ import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
 import { SignJWT, jwtVerify } from 'jose';
 import type { CookieOptions } from 'express';
 import { HttpError } from './http-error';
+import { env } from './env';
 
 /**
  * Single-user authentication primitives.
@@ -27,7 +28,7 @@ const KEY_LENGTH = 32;
  * the gate must never be silently open. Mirrors the old shared-secret middleware.
  */
 function jwtSecret(): Uint8Array {
-  const secret = process.env.AUTH_JWT_SECRET;
+  const secret = env.AUTH_JWT_SECRET;
   if (!secret) throw new HttpError(500, 'AUTH_JWT_SECRET is not configured');
   return new TextEncoder().encode(secret);
 }
@@ -50,7 +51,7 @@ export function hashPassword(plain: string): string {
  * secret, which the gate also depends on).
  */
 export function verifyPassword(plain: string): boolean {
-  const stored = process.env.AUTH_PASSWORD_HASH;
+  const stored = env.AUTH_PASSWORD_HASH;
   if (!stored) throw new HttpError(500, 'AUTH_PASSWORD_HASH is not configured');
 
   const [saltHex, hashHex] = stored.split(':');
@@ -105,7 +106,7 @@ export function cookieOptions(clear = false): CookieOptions {
   return {
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
+    secure: env.COOKIE_SECURE,
     path: '/',
     maxAge: clear ? 0 : MAX_AGE_SECONDS * 1000,
   };

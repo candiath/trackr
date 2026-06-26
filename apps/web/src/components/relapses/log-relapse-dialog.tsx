@@ -5,9 +5,12 @@ import { toast } from 'sonner';
 import {
   relapseEventCreateSchema,
   type Relapse,
+  type RelapseEvent,
   type RelapseEventFormData,
 } from '@track/shared';
 import { nowForInput } from '@/lib/format';
+import { newId, nowISO } from '@/lib/ids';
+import { applyOptimistic } from '@/lib/optimistic';
 import { relapseEventApi, relapseKeys } from '@/services/relapses';
 import { catalogKeys, triggerApi } from '@/services/catalogs';
 import {
@@ -81,24 +84,59 @@ export function LogRelapseDialog({
   const mutation = useMutation({
     mutationFn: (data: RelapseEventFormData) =>
       relapseEventApi.create(relapse.id, data),
+    // Optimistic: insert the event so the streak recomputes instantly (the cards
+    // derive it from the events query) and close the dialog right away. Rolls back
+    // on error; the global mutation handler still surfaces the failure as a toast.
+    onMutate: async (data) => {
+      const at = nowISO();
+      const triggerName = data.triggerCustom?.trim()
+        ? data.triggerCustom.trim()
+        : data.triggerId
+          ? triggers.find((t) => t.id === data.triggerId)?.name ?? null
+          : null;
+      const optimistic: RelapseEvent = {
+        id: data.id!,
+        relapseId: relapse.id,
+        kind: 'RELAPSE',
+        date: new Date(data.date).toISOString(),
+        triggerId: data.triggerId ?? null,
+        triggerName,
+        intensity: data.intensity ?? null,
+        moodLevel: data.moodLevel ?? null,
+        notes: data.notes?.trim() ? data.notes.trim() : null,
+        createdAt: at,
+        updatedAt: at,
+      };
+      const rollback = await applyOptimistic<RelapseEvent[]>(
+        qc,
+        relapseKeys.events(relapse.id),
+        (old = []) => [optimistic, ...old],
+      );
+      onOpenChange(false);
+      reset({ ...INITIAL_VALUES, date: nowForInput() });
+      return { rollback };
+    },
+    onError: (_err, _data, ctx) => ctx?.rollback?.(),
     onSuccess: () => {
-      // Invalidate what depends on events: the streak lives in them.
-      qc.invalidateQueries({ queryKey: relapseKeys.events(relapse.id) });
-      qc.invalidateQueries({ queryKey: relapseKeys.all });
-      qc.invalidateQueries({ queryKey: catalogKeys.triggers });
       toast.success('Relapse logged', {
         description: 'The counter reset from the time you entered.',
       });
-      onOpenChange(false);
-      reset({ ...INITIAL_VALUES, date: nowForInput() });
+    },
+    onSettled: () => {
+      // The streak lives in the events; a custom trigger may have been created.
+      qc.invalidateQueries({ queryKey: relapseKeys.events(relapse.id) });
+      qc.invalidateQueries({ queryKey: relapseKeys.all });
+      qc.invalidateQueries({ queryKey: catalogKeys.triggers });
     },
   });
 
   const onSubmit = handleSubmit((values) => {
     const isCustom = values.triggerId === TRIGGER_CUSTOM;
     const noTrigger = values.triggerId === 'none' || !values.triggerId;
-    // Translate the UI values to the schema contract before persisting.
+    // Translate the UI values to the schema contract before persisting. The client id
+    // is sent so the optimistic event and the stored event share it.
     mutation.mutate({
+      id: newId(),
       date: values.date,
       triggerId: isCustom || noTrigger ? null : values.triggerId,
       triggerCustom: isCustom ? values.triggerCustom?.trim() || undefined : undefined,

@@ -10,7 +10,6 @@
  * is what lets us create rows offline and reference them before any sync.
  */
 import Dexie, { type Table } from 'dexie';
-import { v7 as uuidv7 } from 'uuid';
 import type {
   MoodEntry,
   MoodFactor,
@@ -18,6 +17,7 @@ import type {
   RelapseEvent,
   Trigger,
 } from '@track/shared';
+import { newId, nowISO } from './ids';
 
 /**
  * Sync bookkeeping carried by every stored row but kept out of the UI DTOs.
@@ -37,8 +37,9 @@ export type StoredFactor = MoodFactor & Syncable;
 /** Generic key/value bag (e.g. the sync cursor `lastSyncedAt`). */
 export type MetaRow = { key: string; value: string };
 
-export const nowISO = (): string => new Date().toISOString();
-export const newId = (): string => uuidv7();
+// Re-exported so existing importers (`@/lib/db`) keep working while the Dexie layer
+// is phased out; the canonical home is `@/lib/ids`.
+export { newId, nowISO };
 
 // Preset catalogs so the app is usable offline from the first run. These mirror the
 // backend seed; on the first sync they are reconciled by name (see lib/sync.ts).

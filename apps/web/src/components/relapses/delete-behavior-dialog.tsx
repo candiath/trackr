@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import type { Relapse } from '@track/shared';
 import { relapseApi, relapseKeys } from '@/services/relapses';
+import { applyOptimistic } from '@/lib/optimistic';
 import {
   Dialog,
   DialogContent,
@@ -34,12 +35,18 @@ export function DeleteBehaviorDialog({
 
   const mutation = useMutation({
     mutationFn: () => relapseApi.remove(relapse.id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: relapseKeys.all });
-      toast.success('Behavior deleted');
+    // Optimistic: drop it from the list and leave the detail page immediately.
+    onMutate: async () => {
+      const rollback = await applyOptimistic<Relapse[]>(qc, relapseKeys.all, (old = []) =>
+        old.filter((r) => r.id !== relapse.id),
+      );
       onOpenChange(false);
       navigate('/relapses');
+      return { rollback };
     },
+    onError: (_err, _data, ctx) => ctx?.rollback?.(),
+    onSuccess: () => toast.success('Behavior deleted'),
+    onSettled: () => qc.invalidateQueries({ queryKey: relapseKeys.all }),
   });
 
   return (

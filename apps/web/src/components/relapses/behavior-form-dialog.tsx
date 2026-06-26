@@ -11,6 +11,8 @@ import {
 } from '@track/shared';
 import { relapseApi, relapseKeys } from '@/services/relapses';
 import { COLOR_OPTIONS, ICON_OPTIONS } from '@/lib/relapse-icons';
+import { newId, nowISO } from '@/lib/ids';
+import { applyOptimistic } from '@/lib/optimistic';
 import { cn } from '@/lib/utils';
 import {
   Dialog,
@@ -43,6 +45,17 @@ function isoToDateInput(iso: string): string {
   const d = new Date(iso);
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().slice(0, 10);
+}
+
+/** The persistable behavior fields derived from the form (shared by create + edit). */
+function formToFields(data: RelapseFormData) {
+  return {
+    name: data.name,
+    description: data.description?.trim() ? data.description.trim() : null,
+    color: data.color,
+    icon: data.icon,
+    startDate: new Date(data.startDate).toISOString(),
+  };
 }
 
 /** Build the form defaults from an existing behavior (edit) or blank (create). */
@@ -88,20 +101,51 @@ export function BehaviorFormDialog({
   const mutation = useMutation({
     mutationFn: (data: RelapseFormData) =>
       isEdit ? relapseApi.update(relapse!.id, data) : relapseApi.create(data),
+    // Optimistic: patch (edit) or insert (create) the cached behavior and close the
+    // dialog immediately, so the UI doesn't wait on a cold backend. onError rolls back.
+    onMutate: async (data) => {
+      const rollbacks: Array<() => void> = [];
+      if (isEdit) {
+        const patch = (r: Relapse): Relapse => ({ ...r, ...formToFields(data), updatedAt: nowISO() });
+        rollbacks.push(
+          await applyOptimistic<Relapse[]>(qc, relapseKeys.all, (old = []) =>
+            old.map((r) => (r.id === relapse!.id ? patch(r) : r)),
+          ),
+        );
+        rollbacks.push(
+          await applyOptimistic<Relapse>(qc, relapseKeys.detail(relapse!.id), (old) =>
+            old ? patch(old) : old,
+          ),
+        );
+      } else {
+        const at = nowISO();
+        const optimistic: Relapse = { id: data.id!, ...formToFields(data), createdAt: at, updatedAt: at };
+        rollbacks.push(
+          await applyOptimistic<Relapse[]>(qc, relapseKeys.all, (old = []) => [...old, optimistic]),
+        );
+      }
+      onOpenChange(false);
+      if (!isEdit) reset(buildDefaults());
+      return { rollbacks };
+    },
+    onError: (_err, _data, ctx) => ctx?.rollbacks.forEach((r) => r()),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: relapseKeys.all });
-      if (isEdit) qc.invalidateQueries({ queryKey: relapseKeys.detail(relapse!.id) });
       toast.success(isEdit ? 'Behavior updated' : 'Behavior created', {
         description: isEdit
           ? 'Your changes were saved.'
           : 'You can start tracking your progress.',
       });
-      onOpenChange(false);
-      if (!isEdit) reset(buildDefaults());
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: relapseKeys.all });
+      if (isEdit) qc.invalidateQueries({ queryKey: relapseKeys.detail(relapse!.id) });
     },
   });
 
-  const onSubmit = handleSubmit((values) => mutation.mutate(values));
+  // A client id on create so the optimistic row and the stored row share it.
+  const onSubmit = handleSubmit((values) =>
+    mutation.mutate(isEdit ? values : { ...values, id: newId() }),
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

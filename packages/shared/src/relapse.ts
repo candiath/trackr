@@ -79,6 +79,10 @@ export interface RelapseEvent {
 
 /** Create/edit a behavior to track. */
 export const relapseCreateSchema = z.object({
+  // Client-generated id (uuid v7). Optional so the server can still mint one, but
+  // when present the API upserts by it: the optimistic row and the stored row share
+  // an id, so a write made while the backend is cold needs no later reconciliation.
+  id: z.string().uuid().optional(),
   name: z.string().min(1, 'Name is required').max(60),
   description: z.string().max(280).optional(),
   color: z.string().min(1, 'Pick a color'),
@@ -95,6 +99,11 @@ export type RelapseUpdateData = z.infer<typeof relapseUpdateSchema>;
  * linking the Trigger. Keeping them separate avoids ambiguity in the form.
  */
 export const relapseEventCreateSchema = z.object({
+  // Client-generated id (uuid v7), same rationale as relapseCreateSchema.
+  id: z.string().uuid().optional(),
+  // RELAPSE (resets the streak) or URGE (a resisted temptation, kept on record).
+  // Optional/defaulted so older callers that only log relapses keep working.
+  kind: eventKindSchema.optional(),
   date: z.string().min(1, 'Date is required'),
   triggerId: z.string().optional().nullable(),
   triggerCustom: z.string().max(60).optional(),

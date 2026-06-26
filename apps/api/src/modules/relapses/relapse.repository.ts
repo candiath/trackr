@@ -9,6 +9,13 @@ export const relapseRepository = {
 
   create: (data: Prisma.RelapseCreateInput) => prisma.relapse.create({ data }),
 
+  /**
+   * Create-or-update by a client-supplied id. Idempotent, so a create retried while
+   * the cold backend was waking doesn't duplicate the row.
+   */
+  upsert: (id: string, data: Prisma.RelapseCreateInput) =>
+    prisma.relapse.upsert({ where: { id }, update: data, create: { ...data, id } }),
+
   update: (id: string, data: Prisma.RelapseUpdateInput) =>
     prisma.relapse.update({ where: { id }, data }),
 

@@ -42,9 +42,6 @@ model Relapse {
   startDate   DateTime
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
-  /// Soft-delete tombstone: a deleted row is kept (with a timestamp) so the
-  /// deletion can be propagated to the offline client during sync.
-  deletedAt   DateTime?
   events      RelapseEvent[]
 }
 
@@ -61,10 +58,9 @@ model RelapseEvent {
   moodLevel MoodLevel?
   notes     String?
   createdAt DateTime   @default(now())
-  // @default(now()) so the migration can backfill existing rows; @updatedAt keeps
-  // it fresh on every write — both feed the sync's conflict detection.
+  // @default(now()) backfilled existing rows when the column was added; @updatedAt
+  // keeps it fresh on every write.
   updatedAt DateTime   @default(now()) @updatedAt
-  deletedAt DateTime?
 
   @@index([relapseId])
 }
@@ -76,7 +72,6 @@ model Trigger {
   isSystem  Boolean        @default(false)
   createdAt DateTime       @default(now())
   updatedAt DateTime       @default(now()) @updatedAt
-  deletedAt DateTime?
   events    RelapseEvent[]
 }
 
@@ -88,7 +83,6 @@ model MoodEntry {
   note      String?
   createdAt DateTime     @default(now())
   updatedAt DateTime     @default(now()) @updatedAt
-  deletedAt DateTime?
   factors   MoodFactor[] @relation("MoodEntryFactors")
 }
 
@@ -99,6 +93,5 @@ model MoodFactor {
   isSystem  Boolean     @default(false)
   createdAt DateTime    @default(now())
   updatedAt DateTime    @default(now()) @updatedAt
-  deletedAt DateTime?
   entries   MoodEntry[] @relation("MoodEntryFactors")
 }

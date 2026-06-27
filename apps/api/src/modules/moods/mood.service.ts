@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import type { MoodEntryFormData } from '@track/shared';
 import { factorService } from '../factors/factor.service';
 import { moodRepository } from './mood.repository';
@@ -14,12 +15,15 @@ export const moodService = {
       input.factors,
       input.customFactors ?? [],
     );
-    const row = await moodRepository.create({
+    const data: Prisma.MoodEntryCreateInput = {
       date: new Date(input.date),
       level: input.level,
       note: input.note?.trim() ? input.note.trim() : null,
       factors: { connect: factorIds.map((id) => ({ id })) },
-    });
+    };
+    const row = input.id
+      ? await moodRepository.upsert(input.id, data)
+      : await moodRepository.create(data);
     return toMoodEntryDTO(row);
   },
 

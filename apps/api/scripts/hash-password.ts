@@ -14,4 +14,6 @@ if (!password) {
   process.exit(1);
 }
 
-console.log(`AUTH_PASSWORD_HASH="${hashPassword(password)}"`);
+hashPassword(password).then((hash) => {
+  console.log(`AUTH_PASSWORD_HASH="${hash}"`);
+});

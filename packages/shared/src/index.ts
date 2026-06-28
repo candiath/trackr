@@ -7,4 +7,5 @@
  */
 export * from './common';
 export * from './mood';
+export * from './password';
 export * from './relapse';

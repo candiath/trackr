@@ -1,3 +1,4 @@
+import { passwordSchema } from '@track/shared';
 import { asyncHandler } from '../../lib/async-handler';
 import { ok } from '../../lib/envelope';
 import { HttpError } from '../../lib/http-error';
@@ -14,11 +15,11 @@ import {
  * Reachable without a session (mounted before the gate). Wrong password → 401.
  */
 export const login = asyncHandler(async (req, res) => {
-  const { password } = req.body as { password?: unknown };
-  if (typeof password !== 'string' || password.length === 0) {
-    throw new HttpError(400, 'password is required');
+  const result = passwordSchema.safeParse(req.body?.password);
+  if (!result.success) {
+    throw new HttpError(400, result.error.issues[0].message);
   }
-  if (!verifyPassword(password)) throw new HttpError(401, 'Invalid password');
+  if (!(await verifyPassword(result.data))) throw new HttpError(401, 'Invalid password');
 
   const { token, expiresAt } = await signSession();
   res.cookie(COOKIE_NAME, token, cookieOptions());

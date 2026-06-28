@@ -87,6 +87,7 @@ export const relapseCreateSchema = z.object({
   description: z.string().max(280).optional(),
   color: z.string().min(1, 'Pick a color'),
   icon: z.string().min(1, 'Pick an icon'),
+  // TODO: validate that this is a valid ISO date (or at least YYYY-MM-DD) and not in the future.
   startDate: z.string().min(1, 'Start date is required'),
 });
 export const relapseUpdateSchema = relapseCreateSchema.partial();

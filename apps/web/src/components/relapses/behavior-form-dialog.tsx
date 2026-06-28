@@ -34,17 +34,17 @@ interface BehaviorFormDialogProps {
   relapse?: Relapse;
 }
 
-/** Local YYYY-MM-DD for the `date` input. */
+/** Local YYYY-MM-DDTHH:mm for the `datetime-local` input. */
 function todayInput(): string {
   const d = new Date();
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().slice(0, 10);
+  return d.toISOString().slice(0, 16);
 }
 
 function isoToDateInput(iso: string): string {
   const d = new Date(iso);
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().slice(0, 10);
+  return d.toISOString().slice(0, 16);
 }
 
 /** The persistable behavior fields derived from the form (shared by create + edit). */

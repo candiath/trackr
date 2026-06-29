@@ -9,6 +9,7 @@ import {
   verifyPassword,
   verifySession,
 } from '../../lib/auth';
+import { notifyDiscord } from '../../lib/notify';
 
 /**
  * POST /api/auth/login — exchange the single password for a session cookie.
@@ -19,8 +20,23 @@ export const login = asyncHandler(async (req, res) => {
   if (!result.success) {
     throw new HttpError(400, result.error.issues[0].message);
   }
-  if (!(await verifyPassword(result.data))) throw new HttpError(401, 'Invalid password');
+  if (!(await verifyPassword(result.data))) {
+    notifyDiscord({
+      title: "Failed Login Attempt",
+      description: `An attempt to log in with an invalid password was made.`,
+      color: 0xED4245, // Red color
+      timestamp: new Date().toISOString(),
+    });
+    throw new HttpError(401, 'Invalid password');
+  }
 
+  notifyDiscord({
+    title: "User Logged In",
+    description: `A user has successfully logged in.`,
+    color: 0x57F287, // Green color
+    timestamp: new Date().toISOString(),
+  });
+  
   const { token, expiresAt } = await signSession();
   res.cookie(COOKIE_NAME, token, cookieOptions());
   ok(res, { expiresAt });

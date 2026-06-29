@@ -31,6 +31,13 @@ const webDist = path.resolve(process.cwd(), '../web/dist');
 export function createApp(): Express {
   const app = express();
 
+  // Behind a hosting proxy (Render/Railway/Envoy), the TCP peer is the proxy, not the
+  // client; the real client IP arrives in X-Forwarded-For. Trust exactly ONE hop so
+  // `req.ip` resolves to the real, non-spoofable client (and the login rate limiter
+  // keys on it). NOT `true`: trust-all would let an attacker spoof X-Forwarded-For and
+  // rotate fake IPs.
+  app.set('trust proxy', 1);
+
   // Credentials are on because auth rides in a cookie. With credentials, reflecting
   // an arbitrary origin is unsafe, so we NEVER do it: allow the explicit CORS_ORIGIN
   // allowlist when set, otherwise only localhost (dev). Forgetting CORS_ORIGIN in

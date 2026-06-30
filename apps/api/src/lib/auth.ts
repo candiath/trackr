@@ -103,7 +103,9 @@ export async function signSession(): Promise<{ token: string; expiresAt: number 
 export async function verifySession(token: string | undefined): Promise<Session | null> {
   if (!token) return null;
   try {
-    const { payload } = await jwtVerify(token, jwtSecret());
+    // Pin the algorithm: only accept HS256 (what signSession uses). Defense in depth —
+    // it stops a token from dictating a weaker/unexpected verification algorithm.
+    const { payload } = await jwtVerify(token, jwtSecret(), { algorithms: ['HS256'] });
     return { expiresAt: (payload.exp ?? 0) * 1000 };
   } catch {
     return null;

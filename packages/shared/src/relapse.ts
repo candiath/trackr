@@ -95,6 +95,18 @@ export type RelapseFormData = z.infer<typeof relapseCreateSchema>;
 export type RelapseUpdateData = z.infer<typeof relapseUpdateSchema>;
 
 /**
+ * An event can't be logged in the future. A small tolerance keeps a log made "now"
+ * from being rejected by client/server clock skew or by the minute-precision
+ * rounding of the datetime-local input; anything past that (next hour, tomorrow)
+ * is blocked.
+ */
+const FUTURE_TOLERANCE_MS = 5 * 60_000;
+const notInFuture = (value: string): boolean => {
+  const t = new Date(value).getTime();
+  return Number.isFinite(t) && t <= Date.now() + FUTURE_TOLERANCE_MS;
+};
+
+/**
  * Log a relapse. `triggerId` references the catalog and `triggerCustom` lets the
  * user type a new reason; on the backend one of the two ends up creating or
  * linking the Trigger. Keeping them separate avoids ambiguity in the form.
@@ -105,7 +117,10 @@ export const relapseEventCreateSchema = z.object({
   // RELAPSE (resets the streak) or URGE (a resisted temptation, kept on record).
   // Optional/defaulted so older callers that only log relapses keep working.
   kind: eventKindSchema.optional(),
-  date: z.string().min(1, 'Date is required'),
+  date: z
+    .string()
+    .min(1, 'Date is required')
+    .refine(notInFuture, "The date can't be in the future"),
   triggerId: z.string().optional().nullable(),
   triggerCustom: z.string().max(60).optional(),
   intensity: intensitySchema.optional().nullable(),

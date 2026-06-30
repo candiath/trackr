@@ -107,8 +107,22 @@ export function dayKey(iso: string): string {
 }
 
 /** Default value for datetime-local inputs (now, in local time). */
-export function nowForInput(): string {
-  const d = new Date();
+export function nowForInput(now: Date = new Date()): string {
+  const d = new Date(now);
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().slice(0, 16);
+}
+
+/**
+ * Resolves a `datetime-local` value (minute precision, local time) to the ISO
+ * instant to persist. A datetime-local input has no seconds, so the elapsed-time
+ * counter would otherwise start at a random second offset. We stamp the chosen
+ * minute with the *current* seconds/millis: logging "now" lands on the real
+ * instant, and any past minute the user picks still makes (now − event) land on
+ * whole seconds, so the live counter starts ticking from :00 (latency aside).
+ */
+export function resolveInputInstant(value: string, now: Date = new Date()): string {
+  const d = new Date(value);
+  d.setSeconds(now.getSeconds(), now.getMilliseconds());
+  return d.toISOString();
 }

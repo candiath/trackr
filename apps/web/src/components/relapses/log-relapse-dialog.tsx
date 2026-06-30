@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -8,7 +9,7 @@ import {
   type RelapseEvent,
   type RelapseEventFormData,
 } from '@track/shared';
-import { nowForInput } from '@/lib/format';
+import { nowForInput, resolveInputInstant } from '@/lib/format';
 import { newId, nowISO } from '@/lib/ids';
 import { applyOptimistic } from '@/lib/optimistic';
 import { relapseEventApi, relapseKeys } from '@/services/relapses';
@@ -69,9 +70,15 @@ export function LogRelapseDialog({
     formState: { errors },
   } = useForm<RelapseEventFormData>({
     resolver: zodResolver(relapseEventCreateSchema),
-    // The default date is "now" (recomputed every time the form opens).
     defaultValues: { ...INITIAL_VALUES, date: nowForInput() },
   });
+
+  // This dialog stays mounted (only `open` toggles), so the form's default "now"
+  // would otherwise freeze at page-load time. Re-seed the date — and drop any stale
+  // input — every time it opens, so the suggested time is when the modal was opened.
+  useEffect(() => {
+    if (open) reset({ ...INITIAL_VALUES, date: nowForInput() });
+  }, [open, reset]);
 
   const triggerOptions: SelectOption[] = [
     { value: 'none', label: 'Unspecified' },
@@ -137,7 +144,9 @@ export function LogRelapseDialog({
     // is sent so the optimistic event and the stored event share it.
     mutation.mutate({
       id: newId(),
-      date: values.date,
+      // Stamp the chosen minute with the current seconds so the live counter always
+      // starts ticking from :00 — logging "now" or a past minute alike (see resolveInputInstant).
+      date: resolveInputInstant(values.date),
       triggerId: isCustom || noTrigger ? null : values.triggerId,
       triggerCustom: isCustom ? values.triggerCustom?.trim() || undefined : undefined,
       intensity: values.intensity ?? null,

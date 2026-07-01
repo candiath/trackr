@@ -17,13 +17,17 @@ export const relapseService = {
   },
 
   async create(input: RelapseFormData) {
-    const row = await relapseRepository.create({
+    const data: Prisma.RelapseCreateInput = {
       name: input.name,
       description: input.description ?? null,
       color: input.color,
       icon: input.icon,
       startDate: new Date(input.startDate),
-    });
+    };
+    // With a client id, upsert by it (idempotent); otherwise let the DB mint a cuid.
+    const row = input.id
+      ? await relapseRepository.upsert(input.id, data)
+      : await relapseRepository.create(data);
     return toRelapseDTO(row);
   },
 

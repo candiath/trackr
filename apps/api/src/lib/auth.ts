@@ -1,4 +1,4 @@
-import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
+import { randomBytes, scrypt, timingSafeEqual, type BinaryLike } from 'node:crypto';
 import { SignJWT, jwtVerify } from 'jose';
 import type { CookieOptions } from 'express';
 import { HttpError } from './http-error';
@@ -24,6 +24,19 @@ const MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 const KEY_LENGTH = 32;
 
 /**
+ * Promise wrapper over the asynchronous `scrypt`. scrypt is intentionally CPU-heavy;
+ * the callback form runs it off the event loop — unlike `scryptSync`, which blocks
+ * the single thread and lets a burst of logins stall the whole API.
+ */
+const scryptAsync = (password: BinaryLike, salt: BinaryLike, keylen: number): Promise<Buffer> => {
+  return new Promise((resolve, reject) => {
+    scrypt(password, salt, keylen, (err, derivedKey) =>
+      err ? reject(err) : resolve(derivedKey),
+    );
+  });
+}
+
+/**
  * A missing server-side secret is a misconfiguration (500), not a client error —
  * the gate must never be silently open. Mirrors the old shared-secret middleware.
  */
@@ -38,9 +51,9 @@ function jwtSecret(): Uint8Array {
  * `"<saltHex>:<hashHex>"` string to store in `AUTH_PASSWORD_HASH`. Used by the
  * `auth:hash` helper script; never called at request time.
  */
-export function hashPassword(plain: string): string {
+export async function hashPassword(plain: string): Promise<string> {
   const salt = randomBytes(16);
-  const hash = scryptSync(plain, salt, KEY_LENGTH);
+  const hash = await scryptAsync(plain, salt, KEY_LENGTH);
   return `${salt.toString('hex')}:${hash.toString('hex')}`;
 }
 
@@ -50,7 +63,7 @@ export function hashPassword(plain: string): string {
  * reads as "wrong password" to the client (the 500 path is reserved for the JWT
  * secret, which the gate also depends on).
  */
-export function verifyPassword(plain: string): boolean {
+export async function verifyPassword(plain: string): Promise<boolean> {
   const stored = env.AUTH_PASSWORD_HASH;
   if (!stored) throw new HttpError(500, 'AUTH_PASSWORD_HASH is not configured');
 
@@ -58,7 +71,7 @@ export function verifyPassword(plain: string): boolean {
   if (!saltHex || !hashHex) return false;
 
   const expected = Buffer.from(hashHex, 'hex');
-  const actual = scryptSync(plain, Buffer.from(saltHex, 'hex'), expected.length);
+  const actual = await scryptAsync(plain, Buffer.from(saltHex, 'hex'), expected.length);
   // timingSafeEqual throws on length mismatch, so guard it first.
   return expected.length === actual.length && timingSafeEqual(expected, actual);
 }
@@ -90,7 +103,9 @@ export async function signSession(): Promise<{ token: string; expiresAt: number 
 export async function verifySession(token: string | undefined): Promise<Session | null> {
   if (!token) return null;
   try {
-    const { payload } = await jwtVerify(token, jwtSecret());
+    // Pin the algorithm: only accept HS256 (what signSession uses). Defense in depth —
+    // it stops a token from dictating a weaker/unexpected verification algorithm.
+    const { payload } = await jwtVerify(token, jwtSecret(), { algorithms: ['HS256'] });
     return { expiresAt: (payload.exp ?? 0) * 1000 };
   } catch {
     return null;

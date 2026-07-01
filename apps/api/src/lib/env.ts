@@ -8,6 +8,7 @@ export const envSchema = zod.object({
     PORT: zod.coerce.number().default(3000),
     COOKIE_SECURE: zod.coerce.boolean().default(true),
     NODE_ENV: zod.enum(['development', 'production', 'test']).nonoptional(),
+    DISCORD_WEBHOOK_URL: zod.string().url().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

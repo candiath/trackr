@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import express, { type Express } from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { router } from './routes';
 import { authRouter } from './modules/auth/auth.routes';
@@ -30,6 +31,21 @@ const webDist = path.resolve(process.cwd(), '../web/dist');
  */
 export function createApp(): Express {
   const app = express();
+
+  // Behind a hosting proxy (Render/Railway/Envoy), the TCP peer is the proxy, not the
+  // client; the real client IP arrives in X-Forwarded-For. Trust exactly ONE hop so
+  // `req.ip` resolves to the real, non-spoofable client (and the login rate limiter
+  // keys on it). NOT `true`: trust-all would let an attacker spoof X-Forwarded-For and
+  // rotate fake IPs.
+  app.set('trust proxy', 1);
+
+  // Security headers (CSP, HSTS, X-Content-Type-Options, frame-ancestors, …). helmet's
+  // defaults suit this same-origin app: the bundled JS/CSS/fonts resolve to 'self', the
+  // same-origin /api is covered by default-src 'self', and the default style-src allows
+  // the inline styles React emits (style={{…}}). Only affects responses the API serves
+  // (prod, where it also serves the PWA) — in dev the web is served by Vite. Verify the
+  // browser console for CSP violations after a deploy; relaxing a directive is one line.
+  app.use(helmet());
 
   // Credentials are on because auth rides in a cookie. With credentials, reflecting
   // an arbitrary origin is unsafe, so we NEVER do it: allow the explicit CORS_ORIGIN

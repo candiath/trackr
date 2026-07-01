@@ -15,3 +15,6 @@ build/
 *.log
 .DS_Store
 .vite/
+.notes
+.vscode
+.claude

@@ -2,7 +2,6 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { LayoutDashboard, LogOut, ShieldCheck, SmilePlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from './theme-toggle';
-import { SyncButton } from '@/components/sync/sync-button';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/components/auth/auth-provider';
 
@@ -103,7 +102,6 @@ export function AppLayout() {
           ))}
         </nav>
         <div className="flex flex-col gap-3 border-t border-border pt-4">
-          <SyncButton />
           <LogoutButton />
           <div className="flex items-center justify-between">
             <span className="px-2 text-xs text-muted-foreground">Theme</span>
@@ -117,7 +115,6 @@ export function AppLayout() {
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-card/80 px-4 py-3 backdrop-blur md:hidden">
         <Logo />
         <div className="flex items-center gap-2">
-          <SyncButton />
           <ThemeToggle />
           <LogoutButton iconOnly />
         </div>

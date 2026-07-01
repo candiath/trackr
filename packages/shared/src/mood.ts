@@ -57,6 +57,9 @@ export interface MoodEntry {
  * in the catalog; the backend creates them on the fly.
  */
 export const moodEntryCreateSchema = z.object({
+  // Client-generated id (uuid v7). Optional; when present the API upserts by it so an
+  // optimistic entry and the stored row share an id (idempotent on cold-start retries).
+  id: z.string().uuid().optional(),
   date: z.string().min(1, 'Date is required'),
   level: moodLevelSchema,
   note: z.string().max(500, 'Max 500 characters').optional(),

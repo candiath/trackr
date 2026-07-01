@@ -2,8 +2,10 @@ import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { moodEntryCreateSchema, type MoodEntryFormData } from '@track/shared';
+import { moodEntryCreateSchema, type MoodEntry, type MoodEntryFormData } from '@track/shared';
 import { nowForInput } from '@/lib/format';
+import { newId, nowISO } from '@/lib/ids';
+import { applyOptimistic } from '@/lib/optimistic';
 import { moodApi, moodKeys } from '@/services/mood';
 import { catalogKeys, factorApi } from '@/services/catalogs';
 import {
@@ -61,17 +63,42 @@ export function LogMoodDialog({ open, onOpenChange }: LogMoodDialogProps) {
 
   const mutation = useMutation({
     mutationFn: (data: MoodEntryFormData) => moodApi.create(data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: moodKeys.all });
-      // New factors may have been created: refresh the catalog.
-      qc.invalidateQueries({ queryKey: catalogKeys.factors });
-      toast.success('Mood logged');
+    // Optimistic: insert the entry (newest-first, like the API) and close the dialog
+    // right away, so timeline/calendar/trend update without waiting on the backend.
+    onMutate: async (data) => {
+      const at = nowISO();
+      const catalogNames = data.factors
+        .map((id) => factorCatalog.find((f) => f.id === id)?.name)
+        .filter((n): n is string => Boolean(n));
+      const customNames = (data.customFactors ?? []).map((n) => n.trim()).filter(Boolean);
+      const optimistic: MoodEntry = {
+        id: data.id!,
+        date: new Date(data.date).toISOString(),
+        level: data.level,
+        note: data.note?.trim() ? data.note.trim() : null,
+        factors: data.factors,
+        factorNames: [...catalogNames, ...customNames],
+        createdAt: at,
+        updatedAt: at,
+      };
+      const rollback = await applyOptimistic<MoodEntry[]>(qc, moodKeys.all, (old = []) =>
+        [optimistic, ...old].sort((a, b) => b.date.localeCompare(a.date)),
+      );
       onOpenChange(false);
       reset({ ...INITIAL_VALUES, date: nowForInput() });
+      return { rollback };
+    },
+    onError: (_err, _data, ctx) => ctx?.rollback?.(),
+    onSuccess: () => toast.success('Mood logged'),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: moodKeys.all });
+      // A custom factor may have been created server-side: refresh the catalog.
+      qc.invalidateQueries({ queryKey: catalogKeys.factors });
     },
   });
 
-  const onSubmit = handleSubmit((values) => mutation.mutate(values));
+  // Client id so the optimistic entry and the stored row share it.
+  const onSubmit = handleSubmit((values) => mutation.mutate({ ...values, id: newId() }));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

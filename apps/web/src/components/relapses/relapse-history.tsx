@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { Intensity } from '@track/shared';
+import type { Intensity, RelapseEvent } from '@track/shared';
 import { relapseEventApi, relapseKeys } from '@/services/relapses';
+import { applyOptimistic } from '@/lib/optimistic';
 import { formatDateTime } from '@/lib/format';
 import { MOOD_META } from '@/lib/mood';
 import { Badge } from '@/components/ui/badge';
@@ -28,10 +29,20 @@ export function RelapseHistory({ relapseId }: { relapseId: string }) {
 
   const remove = useMutation({
     mutationFn: (id: string) => relapseEventApi.remove(id),
-    onSuccess: () => {
+    // Optimistic: drop the event so the streak recomputes instantly.
+    onMutate: async (id) => {
+      const rollback = await applyOptimistic<RelapseEvent[]>(
+        qc,
+        relapseKeys.events(relapseId),
+        (old = []) => old.filter((e) => e.id !== id),
+      );
+      return { rollback };
+    },
+    onError: (_err, _id, ctx) => ctx?.rollback?.(),
+    onSuccess: () => toast.success('Entry deleted'),
+    onSettled: () => {
       qc.invalidateQueries({ queryKey: relapseKeys.events(relapseId) });
       qc.invalidateQueries({ queryKey: relapseKeys.all });
-      toast.success('Entry deleted');
     },
   });
 

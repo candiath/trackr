@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
-import type { Relapse } from '@track/shared';
+import type { Relapse, RelapseEvent, RelapseEventFormData } from '@track/shared';
 import { relapseEventApi, relapseKeys } from '@/services/relapses';
 import { catalogKeys, triggerApi } from '@/services/catalogs';
 import { randomUrgeMessage } from '@/lib/urge-messages';
+import { newId, nowISO } from '@/lib/ids';
+import { applyOptimistic } from '@/lib/optimistic';
 import {
   Dialog,
   DialogContent,
@@ -70,32 +72,63 @@ export function ResistUrgeDialog({
   ];
 
   const mutation = useMutation({
-    mutationFn: () => {
-      const isCustom = trigger === TRIGGER_CUSTOM;
-      const noTrigger = trigger === 'none';
-      return relapseEventApi.create(
-        relapse.id,
-        {
-          date: new Date().toISOString(),
-          triggerId: isCustom || noTrigger ? null : trigger,
-          triggerCustom: isCustom ? triggerCustom.trim() || undefined : undefined,
-          intensity: null,
-          moodLevel: null,
-          notes: note.trim() || undefined,
-        },
-        'URGE',
+    mutationFn: (data: RelapseEventFormData) =>
+      relapseEventApi.create(relapse.id, data, 'URGE'),
+    // Optimistic: log the URGE (which never resets the streak) and close immediately.
+    onMutate: async (data) => {
+      const at = nowISO();
+      const triggerName = data.triggerCustom?.trim()
+        ? data.triggerCustom.trim()
+        : data.triggerId
+          ? triggers.find((t) => t.id === data.triggerId)?.name ?? null
+          : null;
+      const optimistic: RelapseEvent = {
+        id: data.id!,
+        relapseId: relapse.id,
+        kind: 'URGE',
+        date: new Date(data.date).toISOString(),
+        triggerId: data.triggerId ?? null,
+        triggerName,
+        intensity: null,
+        moodLevel: null,
+        notes: data.notes?.trim() ? data.notes.trim() : null,
+        createdAt: at,
+        updatedAt: at,
+      };
+      const rollback = await applyOptimistic<RelapseEvent[]>(
+        qc,
+        relapseKeys.events(relapse.id),
+        (old = []) => [optimistic, ...old],
       );
+      onOpenChange(false);
+      return { rollback };
     },
+    onError: (_err, _data, ctx) => ctx?.rollback?.(),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: relapseKeys.events(relapse.id) });
-      qc.invalidateQueries({ queryKey: relapseKeys.all });
-      qc.invalidateQueries({ queryKey: catalogKeys.triggers });
       toast.success('Urge resisted 💪', {
         description: 'Logged — your streak stays intact.',
       });
-      onOpenChange(false);
+    },
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: relapseKeys.events(relapse.id) });
+      qc.invalidateQueries({ queryKey: relapseKeys.all });
+      qc.invalidateQueries({ queryKey: catalogKeys.triggers });
     },
   });
+
+  function handleResist() {
+    const isCustom = trigger === TRIGGER_CUSTOM;
+    const noTrigger = trigger === 'none';
+    mutation.mutate({
+      id: newId(),
+      date: new Date().toISOString(),
+      triggerId: isCustom || noTrigger ? null : trigger,
+      triggerCustom: isCustom ? triggerCustom.trim() || undefined : undefined,
+      intensity: null,
+      moodLevel: null,
+      notes: note.trim() || undefined,
+    });
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -149,7 +182,7 @@ export function ResistUrgeDialog({
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Close
           </Button>
-          <Button type="button" disabled={mutation.isPending} onClick={() => mutation.mutate()}>
+          <Button type="button" disabled={mutation.isPending} onClick={handleResist}>
             {mutation.isPending ? 'Saving…' : 'I resisted 💪'}
           </Button>
         </DialogFooter>

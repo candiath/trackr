@@ -3,6 +3,7 @@ import { Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { MoodEntry } from '@track/shared';
 import { moodApi, moodKeys } from '@/services/mood';
+import { applyOptimistic } from '@/lib/optimistic';
 import { MOOD_META } from '@/lib/mood';
 import { groupByDay } from '@/lib/mood-stats';
 import { formatDate } from '@/lib/format';
@@ -22,10 +23,16 @@ export function MoodTimeline({ entries }: { entries: MoodEntry[] }) {
 
   const remove = useMutation({
     mutationFn: (id: string) => moodApi.remove(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: moodKeys.all });
-      toast.success('Entry deleted');
+    // Optimistic: drop the entry from the cache so the timeline updates instantly.
+    onMutate: async (id) => {
+      const rollback = await applyOptimistic<MoodEntry[]>(qc, moodKeys.all, (old = []) =>
+        old.filter((m) => m.id !== id),
+      );
+      return { rollback };
     },
+    onError: (_err, _id, ctx) => ctx?.rollback?.(),
+    onSuccess: () => toast.success('Entry deleted'),
+    onSettled: () => qc.invalidateQueries({ queryKey: moodKeys.all }),
   });
 
   if (entries.length === 0) {

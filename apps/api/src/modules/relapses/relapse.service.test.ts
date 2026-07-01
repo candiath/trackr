@@ -5,6 +5,8 @@ vi.mock('./relapse.repository', () => ({
   relapseRepository: {
     findById: vi.fn(),
     update: vi.fn(),
+    create: vi.fn(),
+    upsert: vi.fn(),
   },
 }));
 
@@ -71,5 +73,38 @@ describe('relapseService.update (partial)', () => {
   it('an empty body is a no-op update (no fields set)', async () => {
     await relapseService.update('b1', {});
     expect(repo.update).toHaveBeenCalledWith('b1', {});
+  });
+});
+
+describe('relapseService.create (client id → upsert)', () => {
+  const form = {
+    name: 'Alcohol',
+    color: '#aaa',
+    icon: 'wine',
+    startDate: '2026-01-01T00:00:00.000Z',
+  };
+
+  beforeEach(() => {
+    vi.resetAllMocks();
+    repo.create.mockImplementation((data) => ({ id: 'server-cuid', ...data }) as never);
+    repo.upsert.mockImplementation((id, data) => ({ id, ...data }) as never);
+  });
+
+  it('upserts by the client-supplied id (idempotent create)', async () => {
+    await relapseService.create({ ...form, id: 'client-uuid' });
+    expect(repo.upsert).toHaveBeenCalledWith('client-uuid', expect.objectContaining({ name: 'Alcohol' }));
+    expect(repo.create).not.toHaveBeenCalled();
+  });
+
+  it('falls back to a server-minted id when none is provided', async () => {
+    await relapseService.create(form);
+    expect(repo.create).toHaveBeenCalledTimes(1);
+    expect(repo.upsert).not.toHaveBeenCalled();
+  });
+
+  it('parses startDate into a Date', async () => {
+    await relapseService.create({ ...form, id: 'client-uuid' });
+    const [, data] = repo.upsert.mock.calls[0];
+    expect(data.startDate).toBeInstanceOf(Date);
   });
 });

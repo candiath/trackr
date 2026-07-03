@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { Badge, type BadgeProps } from '@/components/ui/badge';
 import { api } from '@/lib/api';
@@ -9,6 +10,10 @@ type ServerStatus = 'connecting' | 'online' | 'offline';
 // The free-tier backend spins down after ~15 min idle; a cold start can take up to
 // ~60s. Give the probe headroom before declaring the server unreachable.
 const HEALTH_TIMEOUT_MS = 90_000;
+
+// While offline, re-probe on this cadence so recovery is automatic (no refocus /
+// click needed). Gentle enough not to hammer a server that's genuinely down.
+const RECOVERY_POLL_MS = 10_000;
 
 const CONFIG: Record<
   ServerStatus,
@@ -32,9 +37,14 @@ const CONFIG: Record<
  * runs silently, without flickering the badge back to "Connecting…".
  */
 function useServerStatus() {
+  const qc = useQueryClient();
   const [status, setStatus] = useState<ServerStatus>('connecting');
   // Guards against overlapping probes (e.g. a focus event landing mid-cold-start).
   const probingRef = useRef(false);
+  // Set when a probe fails, consumed on the next success: it marks a recovery so we
+  // invalidate the caches exactly once (not on every successful probe, which would
+  // resurrect the refetch-on-focus behavior that's intentionally disabled).
+  const wasOfflineRef = useRef(false);
 
   const check = useCallback(() => {
     if (probingRef.current) return;
@@ -52,9 +62,16 @@ function useServerStatus() {
         () => {
           setStatus('online');
           dismissUnreachable();
+          // Recovered from an outage: reads that failed/emptied while down won't
+          // refetch on their own (refetchOnWindowFocus is off), so reload them.
+          if (wasOfflineRef.current) {
+            wasOfflineRef.current = false;
+            void qc.invalidateQueries();
+          }
         },
         () => {
           setStatus('offline');
+          wasOfflineRef.current = true;
           notifyUnreachable();
         },
       )
@@ -62,7 +79,7 @@ function useServerStatus() {
         clearTimeout(timer);
         probingRef.current = false;
       });
-  }, []);
+  }, [qc]);
 
   useEffect(() => {
     check();
@@ -70,6 +87,14 @@ function useServerStatus() {
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);
   }, [check]);
+
+  // While offline, poll gently so recovery is automatic: the badge flips to online,
+  // the toast clears, and the caches invalidate — without a refocus or manual retry.
+  useEffect(() => {
+    if (status !== 'offline') return;
+    const id = setInterval(check, RECOVERY_POLL_MS);
+    return () => clearInterval(id);
+  }, [status, check]);
 
   const recheck = useCallback(() => {
     setStatus('connecting');

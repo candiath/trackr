@@ -7,6 +7,16 @@ import * as authController from './auth.controller';
  * attempts per IP per 15 minutes. Answers with the `{ error }` envelope so the
  * frontend unwraps it like any other failure. Successful logins don't count, so a
  * normal user is never locked out.
+ *
+ * KNOWN LIMITATION (accepted, not fixed — see issue #6): this uses the default
+ * in-memory store, which is per-process and non-persistent. The free-tier host
+ * sleeps after ~15 min idle and restarts on wake, wiping the counter, so an
+ * attacker effectively gets a fresh quota after each cold start; the store also
+ * isn't shared if the service is ever scaled out. Given the threat model
+ * (single-user, hobby app), the real brute-force defense is password strength
+ * (a high-entropy secret, bounded to 22 chars by `passwordSchema`), not this
+ * limiter — which only blunts casual/accidental hammering. A persistent/shared
+ * store (e.g. Redis) would fix it but is deliberately out of scope here.
  */
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

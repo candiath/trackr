@@ -3,12 +3,12 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import {
   MutationCache,
-  QueryCache,
   QueryClient,
   QueryClientProvider,
 } from '@tanstack/react-query';
 import { toast, Toaster } from 'sonner';
 import { ApiError } from '@/lib/api';
+import { notifyUnreachable } from '@/lib/unreachable-toast';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AuthProvider } from '@/components/auth/auth-provider';
 import { App } from '@/App';
@@ -22,30 +22,19 @@ import '@/index.css';
 // fetching; no refetch on window focus because in a personal-use app it bothers
 // more than it helps.
 
-/** Toast for the "API/DB unreachable" case, deduplicated by a fixed id. */
-function toastUnreachable(): void {
-  toast.error("Can't reach the database", {
-    id: 'db-unreachable',
-    description: 'Check that the API and the database are running.',
-  });
-}
-
-/**
- * Queries (reads): only surface the unreachable case. Ordinary read failures are
- * shown inline by the pages, so we don't toast every failed background refetch.
- */
-function onQueryError(error: unknown): void {
-  if (error instanceof ApiError && error.isUnreachable) toastUnreachable();
-}
-
 /**
  * Mutations (writes): surface EVERY failure. A user action (create/delete/…) that
- * fails silently is the worst outcome, so any error gets a toast — the specific
- * unreachable message, or the backend's error message for the rest.
+ * fails silently is the worst outcome, so any error gets a toast — the shared
+ * unreachable notice (same id the ServerStatusBadge uses, so they collapse into
+ * one), or the backend's error message for the rest.
+ *
+ * Reads are NOT toasted here: the ServerStatusBadge's /health probe is the single
+ * source of truth for reachability and owns that toast, so a failed read no longer
+ * fires a second, retry-delayed toast that lagged behind the badge.
  */
 function onMutationError(error: unknown): void {
   if (error instanceof ApiError && error.isUnreachable) {
-    toastUnreachable();
+    notifyUnreachable();
     return;
   }
   toast.error('Something went wrong', {
@@ -54,7 +43,6 @@ function onMutationError(error: unknown): void {
 }
 
 const queryClient = new QueryClient({
-  queryCache: new QueryCache({ onError: onQueryError }),
   mutationCache: new MutationCache({ onError: onMutationError }),
   defaultOptions: {
     queries: { staleTime: 30_000, refetchOnWindowFocus: false },

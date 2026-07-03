@@ -48,6 +48,7 @@ async function request<T>(
   method: string,
   path: string,
   body?: unknown,
+  signal?: AbortSignal,
 ): Promise<T> {
   let res: Response;
   try {
@@ -58,6 +59,8 @@ async function request<T>(
       credentials: 'include',
       // Only serialize when there is a body: a GET/DELETE shouldn't send one.
       body: body !== undefined ? JSON.stringify(body) : undefined,
+      // Optional caller-provided abort (e.g. a timeout on the /health probe).
+      signal,
     });
   } catch {
     // fetch only rejects on a network-level failure (API down, DNS, offline):
@@ -87,7 +90,8 @@ async function request<T>(
 }
 
 export const api = {
-  get: <T>(path: string) => request<T>('GET', path),
+  get: <T>(path: string, opts?: { signal?: AbortSignal }) =>
+    request<T>('GET', path, undefined, opts?.signal),
   post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
   put: <T>(path: string, body?: unknown) => request<T>('PUT', path, body),
   patch: <T>(path: string, body?: unknown) => request<T>('PATCH', path, body),

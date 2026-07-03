@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { ThemeToggle } from './theme-toggle';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/components/auth/auth-provider';
+import { ServerStatusBadge } from './server-status-badge';
 
 /**
  * Main navigation. Centralized in an array so adding a section (e.g. Tasks/Habits
@@ -107,6 +108,7 @@ export function AppLayout() {
             <span className="px-2 text-xs text-muted-foreground">Theme</span>
             <ThemeToggle />
           </div>
+          <ServerStatusBadge />
           <BuildInfo />
         </div>
       </aside>
@@ -115,6 +117,7 @@ export function AppLayout() {
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border bg-card/80 px-4 py-3 backdrop-blur md:hidden">
         <Logo />
         <div className="flex items-center gap-2">
+          <ServerStatusBadge />
           <ThemeToggle />
           <LogoutButton iconOnly />
         </div>
